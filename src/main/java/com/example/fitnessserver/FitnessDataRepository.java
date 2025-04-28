@@ -11,4 +11,5 @@ public interface FitnessDataRepository extends JpaRepository<FitnessData, Long> 
     List<FitnessData> findByUserIdAndTimestampBetween(@Param("userId") String userId,
                                                       @Param("start") long start,
                                                       @Param("end") long end);
+    List<FitnessData> findByUserId(String userId);
 }

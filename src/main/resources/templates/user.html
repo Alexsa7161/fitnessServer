@@ -12,6 +12,29 @@
             margin: 10px 0;
             background-color: #f3f3f3;
         }
+        #messages {
+            margin-top: 10px;
+            color: red;
+        }
+        #crudBlock {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        label { display: block; margin-top: 10px; }
+        .history-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+        }
+        .history-controls {
+            margin-top: 5px;
+        }
+        .edit-field {
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -19,21 +42,35 @@
 
 <label for="userIdInput">User ID:</label>
 <input type="text" id="userIdInput" placeholder="user_0">
-<button onclick="startSocket()">Подключиться</button>
-<button onclick="toggleHistory()">📜 История</button>
+<button id="connectBtn">Подключиться</button>
+<button id="toggleHistoryBtn">📜 История</button>
+
+<div id="messages"></div>
 
 <div id="metrics"></div>
 
-<!-- Исторический блок -->
+<!-- Блок истории -->
 <div id="historyBlock" style="display:none; margin-top: 20px;">
     <h2>История пользователя</h2>
     <label>Начало:</label>
     <input type="datetime-local" id="startTime">
     <label>Конец:</label>
     <input type="datetime-local" id="endTime">
-    <button onclick="loadCustomHistory()">Загрузить</button>
+    <button id="loadHistoryBtn">Загрузить</button>
 
-    <ul id="historyList"></ul>
+    <div id="historyList"></div>
+</div>
+
+<!-- Блок добавления новой записи -->
+<div id="crudBlock">
+    <h2>Добавить новую запись</h2>
+    <label>User ID:</label>
+    <input type="text" id="newUserId" placeholder="user_0">
+    <label>Метрика:</label>
+    <input type="text" id="newMetric" placeholder="heart_rate">
+    <label>Значение:</label>
+    <input type="number" id="newValue" placeholder="85">
+    <button id="addRecordBtn">Добавить запись</button>
 </div>
 
 <script>
@@ -42,12 +79,23 @@
     let userId = "";
     const metricBlocks = {};
 
+    document.getElementById('connectBtn').addEventListener('click', startSocket);
+    document.getElementById('toggleHistoryBtn').addEventListener('click', toggleHistory);
+    document.getElementById('loadHistoryBtn').addEventListener('click', loadCustomHistory);
+    document.getElementById('addRecordBtn').addEventListener('click', addRecord);
+
+    function showMessage(message) {
+        const messages = document.getElementById("messages");
+        messages.textContent = message;
+    }
+
     function startSocket() {
         userId = document.getElementById("userIdInput").value.trim();
         if (!userId) {
-            alert("Введите User ID!");
+            showMessage("❗ Введите User ID!");
             return;
         }
+        showMessage("");
 
         const now = Date.now();
         const start = now - 24 * 60 * 60 * 1000;
@@ -57,7 +105,8 @@
             .then(data => {
                 preloadedHistory = data;
                 data.forEach(renderMetric);
-            });
+            })
+            .catch(() => showMessage("Ошибка загрузки истории."));
 
         socket = new WebSocket("ws://localhost:8080/ws");
         socket.onopen = () => socket.send(userId);
@@ -69,6 +118,7 @@
                 console.error("Ошибка JSON:", e.data);
             }
         };
+        socket.onerror = () => showMessage("Ошибка подключения к WebSocket.");
     }
 
     function renderMetric(data) {
@@ -113,16 +163,25 @@
         const list = document.getElementById("historyList");
         list.innerHTML = "";
         if (data.length === 0) {
-            list.innerHTML = "<li>Нет данных</li>";
+            list.innerHTML = "<p>Нет данных</p>";
             return;
         }
         data.forEach(entry => {
-            const time = new Date(Number(entry.timestamp)); // 🛠️ конвертируем явно
-            const formatted = isNaN(time) ? "Неверная дата" : time.toLocaleString();
+            const item = document.createElement("div");
+            item.className = "history-item";
 
-            const li = document.createElement("li");
-            li.textContent = `${entry.metric}: ${entry.value} (${formatted})`;
-            list.appendChild(li);
+            const time = new Date(Number(entry.timestamp)).toLocaleString();
+            item.innerHTML = `
+                <strong>${entry.metric}</strong>: ${entry.value}
+                <br><small>${time}</small>
+                <div class="history-controls">
+                    <button onclick="deleteRecord(${entry.id})">Удалить</button>
+                    <button onclick="showEditField(${entry.id}, ${entry.value})">Изменить</button>
+                    <div id="editField-${entry.id}" class="edit-field" style="display:none;"></div>
+                </div>
+            `;
+
+            list.appendChild(item);
         });
     }
 
@@ -131,16 +190,97 @@
         const endInput = document.getElementById("endTime").value;
 
         if (!startInput || !endInput) {
-            alert("Укажите оба времени!");
+            showMessage("❗ Укажите оба времени для истории!");
             return;
         }
+        showMessage("");
 
         const start = new Date(startInput).getTime();
         const end = new Date(endInput).getTime();
 
         fetch(`/api/history?userId=${userId}&startTimestamp=${start}&endTimestamp=${end}`)
             .then(res => res.json())
-            .then(data => displayHistory(data));
+            .then(data => {
+                preloadedHistory = data;
+                displayHistory(data);
+            })
+            .catch(() => showMessage("Ошибка загрузки истории."));
+    }
+
+    function addRecord() {
+        const newUserId = document.getElementById("newUserId").value.trim();
+        const newMetric = document.getElementById("newMetric").value.trim();
+        const newValue = document.getElementById("newValue").value.trim();
+
+        if (!newUserId || !newMetric || !newValue) {
+            showMessage("❗ Заполните все поля для добавления!");
+            return;
+        }
+
+        const payload = {
+            userId: newUserId,
+            metric: newMetric,
+            value: parseFloat(newValue),
+            timestamp: Date.now().toString()
+        };
+
+        fetch('/api/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(res => {
+                if (res.ok) showMessage("✅ Запись добавлена успешно!");
+                else showMessage("❗ Ошибка добавления записи.");
+            })
+            .catch(() => showMessage("❗ Ошибка сети при добавлении."));
+    }
+
+    function deleteRecord(id) {
+        fetch(`/api/data/${id}`, {
+            method: 'DELETE'
+        })
+            .then(res => {
+                if (res.ok) {
+                    showMessage("✅ Запись удалена!");
+                    loadCustomHistory(); // Обновить историю
+                } else {
+                    showMessage("❗ Ошибка удаления записи.");
+                }
+            })
+            .catch(() => showMessage("❗ Ошибка сети при удалении."));
+    }
+
+    function showEditField(id, currentValue) {
+        const field = document.getElementById(`editField-${id}`);
+        field.style.display = "block";
+        field.innerHTML = `
+            <input type="number" id="newValue-${id}" value="${currentValue}" placeholder="Новое значение">
+            <button onclick="confirmEdit(${id})">Принять</button>
+        `;
+    }
+
+    function confirmEdit(id) {
+        const newValue = document.getElementById(`newValue-${id}`).value.trim();
+        if (!newValue) {
+            showMessage("❗ Введите новое значение!");
+            return;
+        }
+
+        fetch(`/api/data/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value: parseFloat(newValue) })
+        })
+            .then(res => {
+                if (res.ok) {
+                    showMessage("✅ Запись обновлена!");
+                    loadCustomHistory(); // Обновить историю
+                } else {
+                    showMessage("❗ Ошибка обновления записи.");
+                }
+            })
+            .catch(() => showMessage("❗ Ошибка сети при обновлении."));
     }
 </script>
 </body>
