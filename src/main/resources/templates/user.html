@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Fitness Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        #metrics .metric {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #f3f3f3;
+        }
+    </style>
+</head>
+<body>
+<h1>Актуальные данные пользователя</h1>
+
+<label for="userIdInput">User ID:</label>
+<input type="text" id="userIdInput" placeholder="user_0">
+<button onclick="startSocket()">Подключиться</button>
+<button onclick="toggleHistory()">📜 История</button>
+
+<div id="metrics"></div>
+
+<!-- Исторический блок -->
+<div id="historyBlock" style="display:none; margin-top: 20px;">
+    <h2>История пользователя</h2>
+    <label>Начало:</label>
+    <input type="datetime-local" id="startTime">
+    <label>Конец:</label>
+    <input type="datetime-local" id="endTime">
+    <button onclick="loadCustomHistory()">Загрузить</button>
+
+    <ul id="historyList"></ul>
+</div>
+
+<script>
+    let socket;
+    let preloadedHistory = [];
+    let userId = "";
+    const metricBlocks = {};
+
+    function startSocket() {
+        userId = document.getElementById("userIdInput").value.trim();
+        if (!userId) {
+            alert("Введите User ID!");
+            return;
+        }
+
+        const now = Date.now();
+        const start = now - 24 * 60 * 60 * 1000;
+
+        fetch(`/api/history?userId=${userId}&startTimestamp=${start}&endTimestamp=${now}`)
+            .then(res => res.json())
+            .then(data => {
+                preloadedHistory = data;
+                data.forEach(renderMetric);
+            });
+
+        socket = new WebSocket("ws://localhost:8080/ws");
+        socket.onopen = () => socket.send(userId);
+        socket.onmessage = e => {
+            try {
+                const data = JSON.parse(e.data);
+                renderMetric(data);
+            } catch (err) {
+                console.error("Ошибка JSON:", e.data);
+            }
+        };
+    }
+
+    function renderMetric(data) {
+        const { timestamp, metric, value } = data;
+        const metricsContainer = document.getElementById("metrics");
+
+        if (!metricBlocks[metric]) {
+            const block = document.createElement("div");
+            block.className = "metric";
+            block.id = metric;
+
+            const title = document.createElement("h3");
+            title.textContent = `📊 ${metric}`;
+            block.appendChild(title);
+
+            const ts = document.createElement("p");
+            ts.className = "ts";
+            block.appendChild(ts);
+
+            const val = document.createElement("p");
+            val.className = "val";
+            block.appendChild(val);
+
+            metricsContainer.appendChild(block);
+            metricBlocks[metric] = block;
+        }
+
+        const block = metricBlocks[metric];
+        block.querySelector(".ts").textContent = `🕒 ${new Date(Number(timestamp)).toLocaleString()}`;
+        block.querySelector(".val").textContent = `🔢 Значение: ${value}`;
+    }
+
+    function toggleHistory() {
+        const block = document.getElementById("historyBlock");
+        block.style.display = block.style.display === "none" ? "block" : "none";
+        if (block.style.display === "block") {
+            displayHistory(preloadedHistory);
+        }
+    }
+
+    function displayHistory(data) {
+        const list = document.getElementById("historyList");
+        list.innerHTML = "";
+        if (data.length === 0) {
+            list.innerHTML = "<li>Нет данных</li>";
+            return;
+        }
+        data.forEach(entry => {
+            const time = new Date(Number(entry.timestamp)); // 🛠️ конвертируем явно
+            const formatted = isNaN(time) ? "Неверная дата" : time.toLocaleString();
+
+            const li = document.createElement("li");
+            li.textContent = `${entry.metric}: ${entry.value} (${formatted})`;
+            list.appendChild(li);
+        });
+    }
+
+    function loadCustomHistory() {
+        const startInput = document.getElementById("startTime").value;
+        const endInput = document.getElementById("endTime").value;
+
+        if (!startInput || !endInput) {
+            alert("Укажите оба времени!");
+            return;
+        }
+
+        const start = new Date(startInput).getTime();
+        const end = new Date(endInput).getTime();
+
+        fetch(`/api/history?userId=${userId}&startTimestamp=${start}&endTimestamp=${end}`)
+            .then(res => res.json())
+            .then(data => displayHistory(data));
+    }
+</script>
+</body>
+</html>

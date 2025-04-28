@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>История данных</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .entry { border-bottom: 1px solid #ccc; padding: 5px 0; }
+  </style>
+</head>
+<body>
+<h1>История пользователя</h1>
+
+<label for="start">Начало:</label>
+<input type="datetime-local" id="start">
+<label for="end">Конец:</label>
+<input type="datetime-local" id="end">
+<button onclick="loadHistory()">Загрузить</button>
+
+<div id="history"></div>
+
+<script>
+  const userId = new URLSearchParams(window.location.search).get("userId") || "";
+
+  function loadHistory() {
+    const start = new Date(document.getElementById("start").value).getTime();
+    const end = new Date(document.getElementById("end").value).getTime();
+
+    if (!userId || !start || !end) {
+      alert("Проверьте поля ввода и наличие userId!");
+      return;
+    }
+
+    fetch(`/api/history?userId=${userId}&startTimestamp=${start}&endTimestamp=${end}`)
+            .then(res => res.json())
+            .then(data => {
+              const container = document.getElementById("history");
+              container.innerHTML = "";
+
+              if (data.length === 0) {
+                container.textContent = "Нет данных за указанный период.";
+                return;
+              }
+
+              data.forEach(entry => {
+                const div = document.createElement("div");
+                div.className = "entry";
+                div.textContent = `[${new Date(Number(entry.timestamp)).toLocaleString()}] ${entry.metric} = ${entry.value}`;
+                container.appendChild(div);
+              });
+            });
+  }
+</script>
+</body>
+</html>
