@@ -25,10 +25,10 @@ jobs:
           sleep 30  # Простая задержка (можно заменить на healthcheck + curl + netcat и т.д.)
       - name: Create Kafka topics
         run: |
-          docker exec kafka-1 kafka-topics --create --topic heart-rate-topic --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1
-          docker exec kafka-1 kafka-topics --create --topic location-topic --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1
-          docker exec kafka-1 kafka-topics --create --topic steps-topic --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1
-          docker exec kafka-1 kafka-topics --create --topic battery-topic --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1
+          docker exec fitnessserver-kafka-1-1 kafka-topics --create --topic heart-rate-topic --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1
+          docker exec fitnessserver-kafka-1-1 kafka-topics --create --topic location-topic --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1
+          docker exec fitnessserver-kafka-1-1 kafka-topics --create --topic steps-topic --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1
+          docker exec fitnessserver-kafka-1-1 kafka-topics --create --topic battery-topic --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
