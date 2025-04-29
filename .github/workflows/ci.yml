@@ -16,7 +16,7 @@ jobs:
 
       - name: Set up Docker Compose
         run: |
-          docker-compose -f docker-compose.yml up -d
+          docker compose -f docker-compose.yml up -d
           docker ps
 
       - name: Wait for Kafka to become available
@@ -35,6 +35,6 @@ jobs:
 
       - name: Tear down Docker containers
         if: always()
-        run: docker-compose -f docker-compose.yml down
+        run: docker compose -f docker-compose.yml down
       - name: Run tests
         run: mvn test
