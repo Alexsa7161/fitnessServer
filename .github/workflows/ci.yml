@@ -50,4 +50,4 @@ jobs:
 
       - name: Tear down Docker containers
         if: always()
-        run: docker-compose -f docker-compose.yml down
+        run: docker compose -f docker-compose.yml down
