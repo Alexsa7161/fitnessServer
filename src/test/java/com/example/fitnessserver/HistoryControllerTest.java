@@ -37,14 +37,14 @@ public class HistoryControllerTest {
         data1.setUserId("user1");
         data1.setMetric("heart_rate");
         data1.setValue(85.0);
-        data1.setTimestamp(String.valueOf(1000L));
+        data1.setTimestamp(1000L);
 
         FitnessData data2 = new FitnessData();
         data2.setId(2L);
         data2.setUserId("user1");
         data2.setMetric("steps");
         data2.setValue(1200.0);
-        data2.setTimestamp(String.valueOf(1500L));
+        data2.setTimestamp(1500L);
 
         List<FitnessData> mockData = Arrays.asList(data1, data2);
 

@@ -58,7 +58,7 @@ public class KafkaStorageConsumer {
                                 json.get("user").asText(),
                                 json.get("metric").asText(),
                                 json.get("value").asDouble(),
-                                json.get("timestamp").asText()
+                                json.get("timestamp").asInt()
                         );
                         buffer.add(data);
                     } catch (Exception e) {

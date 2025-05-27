@@ -34,7 +34,7 @@ public class FitnessDataControllerTest {
         sampleData.setUserId("user_1");
         sampleData.setMetric("HeartRate");
         sampleData.setValue(75.5);
-        sampleData.setTimestamp("2025-04-27T10:00:00");
+        sampleData.setTimestamp(1745740800000L);
     }
 
     @Test

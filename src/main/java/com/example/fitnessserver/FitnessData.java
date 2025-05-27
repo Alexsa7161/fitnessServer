@@ -18,5 +18,6 @@ public class FitnessData {
     private String userId;
     private String metric;
     private Double value;
-    private String timestamp;
+    @Column(name = "timestamp")
+    private long timestamp;
 }
