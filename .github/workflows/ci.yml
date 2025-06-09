@@ -155,14 +155,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-  
-      - name: Wait for PostgreSQL
-        run: |
-          echo "Ждем, пока PostgreSQL станет доступен..."
-          until docker exec postgres pg_isready -U postgres; do
-            sleep 2
-          done
-  
+
       - name: Run tests
         run: |
           mvn test \
