@@ -14,7 +14,7 @@ test('fetchHistory делает правильный запрос и возвр�
 
     const data = await api.fetchHistory('user1', 1000, 2000);
     expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/history?userId=user1&startTimestamp=1000&endTimestamp=2000'
+        'http://localhost:9090/api/history?userId=user1&startTimestamp=1000&endTimestamp=2000'
     );
     expect(data).toEqual(mockResponse);
 });
@@ -25,7 +25,7 @@ test('addRecord делает POST запрос', async () => {
 
     await api.addRecord(record);
     expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/data',
+        'http://localhost:9090/api/data',
         expect.objectContaining({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -37,7 +37,7 @@ test('addRecord делает POST запрос', async () => {
 test('deleteRecord делает DELETE запрос', async () => {
     global.fetch.mockResolvedValue({});
     await api.deleteRecord(123);
-    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8080/api/data/123', { method: 'DELETE' });
+    expect(global.fetch).toHaveBeenCalledWith('http://localhost:9090/api/data/123', { method: 'DELETE' });
 });
 
 test('updateRecord делает PATCH запрос', async () => {

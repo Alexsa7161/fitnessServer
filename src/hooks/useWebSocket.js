@@ -6,7 +6,7 @@ export const useWebSocket = (userId, onMessage) => {
     useEffect(() => {
         if (!userId) return;
 
-        const socket = new WebSocket('ws://localhost:8080/ws');
+        const socket = new WebSocket('ws://localhost:9090/ws');
         socket.onopen = () => socket.send(userId);
         socket.onmessage = (e) => {
             try {
