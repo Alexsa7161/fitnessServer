@@ -44,7 +44,7 @@ test('updateRecord делает PATCH запрос', async () => {
     global.fetch.mockResolvedValue({});
     await api.updateRecord(123, 42);
     expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/data/123',
+        'http://localhost:9090/api/data/123',
         expect.objectContaining({
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
