@@ -35,7 +35,6 @@ jobs:
 
   client_setup:
     runs-on: ubuntu-latest
-    needs: build
     defaults:
       run:
         working-directory: client
@@ -47,13 +46,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+
+      - name: Set default NPM registry
+        run: npm config set registry https://registry.npmjs.org/
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build client
         run: npm run build
+
+      - name: Upload client artifacts (node_modules + dist)
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-artifact
+          path: |
+            client/node_modules
+            client/dist
+            client/.next  # включить, если используется Next.js
 
   client_test:
     runs-on: ubuntu-latest
@@ -69,17 +79,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Download client artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: client-artifact
+          path: client
 
       - name: Run client tests
-        run: npm test -- --watchAll=false --ci
+        run: npm test -- --watchAll=false
 
-  server_test:
+  test:
     runs-on: ubuntu-latest
-    needs: [build, client_setup]
+    needs: [build, client_test]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -114,7 +126,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build Spring Boot jar
+      - name: Build Spring Boot jar (again for context)
         run: mvn clean package -DskipTests
 
       - name: Run Spring Boot app in background
@@ -135,13 +147,9 @@ jobs:
       - name: Run Maven tests
         run: mvn test
 
-      - name: Stop Spring Boot app
-        run: |
-          pkill -f "java -jar target/fitness-server-.*.jar" || true
-
   cleanup:
     runs-on: ubuntu-latest
-    needs: [client_test, server_test]
+    needs: test
     if: always()
     steps:
       - name: Checkout code
