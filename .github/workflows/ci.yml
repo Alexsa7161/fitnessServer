@@ -74,18 +74,23 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+  
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
+  
+      # Загружаем артефакты с зависимостями и сборкой
       - name: Download client artifacts
         uses: actions/download-artifact@v4
         with:
           name: client-artifact
           path: client
-
+  
+      # Убедимся, что зависимости доступны
+      - name: Verify dependencies
+        run: ls -la node_modules/
+  
       - name: Run client tests
         run: npm test -- --watchAll=false
 
