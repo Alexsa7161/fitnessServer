@@ -30,7 +30,7 @@ public class FitnessTrackerTest {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
         // 1. Открываем login.html
-        driver.get("http://localhost:8080/login");
+        driver.get("http://localhost:9090/login");
 
         // 2. Вводим user_id и отправляем форму
         WebElement userIdField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("user_id")));

@@ -73,7 +73,7 @@ jobs:
         run: |
           echo "Waiting for Spring Boot to be ready..."
           for i in {1..20}; do
-            curl -s http://localhost:8080/actuator/health && break
+            curl -s http://localhost:9090/actuator/health && break
             echo "Waiting..."
             sleep 5
           done
