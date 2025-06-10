@@ -80,16 +80,8 @@ jobs:
         with:
           node-version: '20'
   
-      # Загружаем артефакты с зависимостями и сборкой
-      - name: Download client artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: client-artifact
-          path: client
-  
-      # Убедимся, что зависимости доступны
-      - name: Verify dependencies
-        run: ls -la node_modules/
+      - name: Install dependencies
+        run: npm ci
   
       - name: Run client tests
         run: npm test -- --watchAll=false
