@@ -13,7 +13,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>fitness-server</name>
     <description>Fitness Server</description>
-
+ 
     <properties>
         <java.version>17</java.version>
     </properties>
