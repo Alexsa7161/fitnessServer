@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { addRecord } from '../services/api';
 
 export default function CrudForm() {
-    window.alert = jest.fn();
     const [userId, setUserId] = useState('');
     const [metric, setMetric] = useState('');
     const [value, setValue] = useState('');
@@ -17,7 +16,6 @@ export default function CrudForm() {
         };
         addRecord(payload).then(() => alert("✅ Запись добавлена!"));
     };
-    window.alert = jest.fn();
     return (
         <div className="mt-6 border-t pt-4">
             <h2>Добавить запись</h2>
