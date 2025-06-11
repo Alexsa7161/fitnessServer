@@ -43,6 +43,7 @@ services:
       - eventhub-net
 
   fitness-app:
+    image: alexsa7161/fitness-app:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -56,6 +57,7 @@ services:
       - eventhub-net
 
   fitness-client:
+    image: alexsa7161/fitness-client:latest
     build:
       context: ./client      # Папка с фронтендом
       dockerfile: Dockerfile # Если нужен, или используйте стандартный (см. ниже)
