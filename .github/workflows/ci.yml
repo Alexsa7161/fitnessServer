@@ -2,9 +2,9 @@ name: Java CI Pipeline
 
 on:
   push:
-    branches: [ "new" ]
+    branches: [ "Alexsa7161-new_test" ]
   pull_request:
-    branches: [ "new" ]
+    branches: [ "Alexsa7161-new_test" ]
 
 jobs:
   build:
