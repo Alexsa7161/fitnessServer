@@ -47,11 +47,22 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8085:8085"
+      - "8085:8085"           # backend порт (измените, если нужно)
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
     depends_on:
       - postgres
+    networks:
+      - eventhub-net
+
+  fitness-client:
+    build:
+      context: ./client      # Папка с фронтендом
+      dockerfile: Dockerfile # Если нужен, или используйте стандартный (см. ниже)
+    ports:
+      - "3000:3000"          # фронтенд доступен на порту 3000
+    depends_on:
+      - fitness-app
     networks:
       - eventhub-net
 
