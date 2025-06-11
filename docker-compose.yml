@@ -60,7 +60,7 @@ services:
       context: ./client      # Папка с фронтендом
       dockerfile: Dockerfile # Если нужен, или используйте стандартный (см. ниже)
     ports:
-      - "3000:3000"          # фронтенд доступен на порту 3000
+      - "3000:80"          # фронтенд доступен на порту 3000
     depends_on:
       - fitness-app
     networks:
