@@ -5,7 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.kafka.annotation.EnableKafka;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = KafkaAutoConfiguration.class)
+@EnableKafka
 public class FitnessServerApplication {
     public static void main(String[] args) {
         SpringApplication.run(FitnessServerApplication.class, args);
