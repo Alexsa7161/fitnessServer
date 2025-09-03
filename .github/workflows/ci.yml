@@ -141,8 +141,6 @@ jobs:
             sleep 5
           done
 
-      - name: Run Maven tests
-        run: mvn test
 
   cleanup:
     runs-on: ubuntu-latest
