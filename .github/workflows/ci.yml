@@ -156,7 +156,7 @@ jobs:
       - name: Build and push Docker image
         run: |
           # Собираем образ с корректным тегом
-          docker build -t alexsa7161/fitness-backend:latest .
+          docker build -t alexsa7161/fitness-backend_from_ci:latest .
           # Пушим в Docker Hub
           docker push alexsa7161/fitness-backend_from_ci:latest
   cleanup:
