@@ -153,14 +153,12 @@ jobs:
           username: "alexsa7161"
           password: "dckr_pat_9Ufz_nFag9PwfoEzGozAR1NsNpc"
   
-      - name: Build Docker image
+      - name: Build and push Docker image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/fitness-backend:latest .
-  
-      - name: Push Docker image
-        run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/fitness-backend:latest
-
+          # Собираем образ с корректным тегом
+          docker build -t alexsa7161/fitness-backend:latest .
+          # Пушим в Docker Hub
+          docker push alexsa7161/fitness-backend_from_ci:latest
   cleanup:
     runs-on: ubuntu-latest
     needs: test
