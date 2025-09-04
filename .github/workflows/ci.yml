@@ -140,7 +140,26 @@ jobs:
             echo "Waiting..."
             sleep 5
           done
-
+  docker_push:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+  
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: "alexsa7161"
+          password: "dckr_pat_9Ufz_nFag9PwfoEzGozAR1NsNpc"
+  
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/fitness-backend:latest .
+  
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/fitness-backend:latest
 
   cleanup:
     runs-on: ubuntu-latest
