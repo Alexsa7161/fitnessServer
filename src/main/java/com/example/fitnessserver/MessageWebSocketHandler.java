@@ -1,5 +1,6 @@
 package com.example.fitnessserver;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -9,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
+@Slf4j
 public class MessageWebSocketHandler extends TextWebSocketHandler {
 
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
@@ -16,7 +18,7 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        System.out.println("WebSocket подключен: " + session.getId());
+        log.info("WebSocket подключен: {}", session.getId());
     }
 
     @Override
@@ -24,7 +26,7 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
         String userId = message.getPayload();
         sessionUserIds.put(session.getId(), userId);
         sessions.put(userId, session);
-        System.out.println("Привязали userId: " + userId + " к сессии " + session.getId());
+        log.info("Привязали userId: {} к сессии {}", userId, session.getId());
     }
 
     @Override
@@ -34,17 +36,17 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
         if (userId != null) {
             sessions.remove(userId);
         }
+        log.info("WebSocket сессия {} закрыта, userId {}", sessionId, userId);
     }
 
-public void sendToUser(String userId, String message) {
-    WebSocketSession session = sessions.get(userId);
-    if (session != null && session.isOpen()) {
-        try {
-            session.sendMessage(new TextMessage(message));
-        } catch (IOException e) {
-            // Log the exception properly instead of printing stack trace
-            logger.error("Failed to send WebSocket message to user " + userId, e);
+    public void sendToUser(String userId, String message) {
+        WebSocketSession session = sessions.get(userId);
+        if (session != null && session.isOpen()) {
+            try {
+                session.sendMessage(new TextMessage(message));
+            } catch (IOException e) {
+                log.error("Не удалось отправить WebSocket сообщение пользователю {}", userId, e);
+            }
         }
     }
-}
 }
