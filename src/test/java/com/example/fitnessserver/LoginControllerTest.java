@@ -1,13 +1,10 @@
 package com.example.fitnessserver;
 
-import jakarta.servlet.http.HttpSession;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.ui.Model;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -19,16 +16,6 @@ public class LoginControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
-    private Model model; // Для @ModelAttribute
-
-    private HttpSession session;
-
-    @BeforeEach
-    public void setUp() {
-        session = new MockHttpSession();
-    }
-
     @Test
     public void testShowLoginPage() throws Exception {
         mockMvc.perform(get("/login"))
@@ -39,26 +26,27 @@ public class LoginControllerTest {
     @Test
     public void testProcessLoginWithEmptyUserId() throws Exception {
         mockMvc.perform(post("/login")
-                        .param("user_id", "")
-                        .session((MockHttpSession) session))
+                        .param("user_id", ""))
                 .andExpect(status().isOk())
                 .andExpect(view().name("login"))
-                .andExpect(model().attributeExists("error"));
+                .andExpect(model().attributeExists("error"))
+                .andExpect(model().attribute("error", "Введите ID пользователя."));
     }
 
     @Test
     public void testProcessLoginWithValidUserId() throws Exception {
-        String userId = "user_123";
+        MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(post("/login")
-                        .param("user_id", userId)
-                        .session((MockHttpSession) session))
+                        .param("user_id", "user_123")
+                        .session(session))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/user"));
 
-        // Проверяем, что в сессии появился объект User
-        User user = (User) session.getAttribute("user");
-        assertNotNull(user);
-        assertEquals(userId, user.getUserId());
+        // Проверка, что сессия содержит объект User
+        Object userAttr = session.getAttribute("user");
+        assertNotNull(userAttr, "User object should be in session");
+        assertTrue(userAttr instanceof User, "Session attribute should be of type User");
+        assertEquals("user_123", ((User) userAttr).getUserId(), "User ID should match the input");
     }
 }
