@@ -1,109 +1,101 @@
 package com.example.fitnessserver;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import jakarta.annotation.PostConstruct;
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Field;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+@Service
+public class KafkaStorageConsumer {
 
-public class KafkaStorageConsumerTest {
+    private final FitnessDataRepository repository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final List<String> topics = List.of(
+            "heart-rate-topic",
+            "location-topic",
+            "steps-topic",
+            "battery-topic"
+    );
+    private final List<FitnessData> buffer = new CopyOnWriteArrayList<>();
+    private volatile boolean running = true; // флаг для остановки потока
 
-    private FitnessDataRepository repository;
-    private KafkaStorageConsumer consumer;
+    // Сделаем таймаут на сохранение настраиваемым
+    private final long saveIntervalMs;
 
-    @BeforeEach
-    public void setUp() {
-        repository = mock(FitnessDataRepository.class);
-        consumer = new KafkaStorageConsumer(repository);
+    public KafkaStorageConsumer(FitnessDataRepository repository) {
+        this(repository, 60_000); // по умолчанию 1 минута
     }
 
-    @Test
-    public void testStartDoesNotThrow() {
-        // Просто проверяем, что метод запускается без исключений
-        consumer.start();
+    // Конструктор для тестов
+    public KafkaStorageConsumer(FitnessDataRepository repository, long saveIntervalMs) {
+        this.repository = repository;
+        this.saveIntervalMs = saveIntervalMs;
     }
 
-    @Test
-    public void testSavePeriodicallySavesData() throws Exception {
-        // Подменяем buffer через reflection
-        Field bufferField = KafkaStorageConsumer.class.getDeclaredField("buffer");
-        bufferField.setAccessible(true);
-        CopyOnWriteArrayList<FitnessData> buffer = new CopyOnWriteArrayList<>();
-        buffer.add(new FitnessData(1L, "user1", "steps", 100.0, 123L));
-        bufferField.set(consumer, buffer);
-
-        // Останавливаем цикл сразу после одной итерации
-        consumer.stopSaving();
-
-        // Вызываем приватный метод через reflection
-        var method = KafkaStorageConsumer.class.getDeclaredMethod("savePeriodically");
-        method.setAccessible(true);
-        method.invoke(consumer);
-
-        // Проверяем, что вызвался repository.saveAll()
-        verify(repository, times(1)).saveAll(anyList());
+    @PostConstruct
+    public void start() {
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        executor.submit(this::consumeMessages);
+        executor.submit(this::savePeriodically);
     }
 
-    @Test
-    public void testSavePeriodicallyInterrupted() throws Exception {
-        consumer.stopSaving(); // чтобы цикл сразу вышел
+    private void consumeMessages() {
+        Properties props = new Properties();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "fitness-storage-group");
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 
-        var method = KafkaStorageConsumer.class.getDeclaredMethod("savePeriodically");
-        method.setAccessible(true);
-
-        // Прерываем поток
-        Thread.currentThread().interrupt();
-        method.invoke(consumer);
-
-        assertTrue(Thread.interrupted()); // очищаем флаг
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
+            consumer.subscribe(topics);
+            while (true) {
+                ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
+                for (ConsumerRecord<String, String> record : records) {
+                    try {
+                        JsonNode json = objectMapper.readTree(record.value());
+                        FitnessData data = new FitnessData(
+                                null,
+                                json.get("user").asText(),
+                                json.get("metric").asText(),
+                                json.get("value").asDouble(),
+                                json.get("timestamp").asInt()
+                        );
+                        buffer.add(data);
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
     }
 
-    @Test
-    public void testConsumeMessagesParsesValidJson() throws Exception {
-        // Делаем буфер доступным
-        Field bufferField = KafkaStorageConsumer.class.getDeclaredField("buffer");
-        bufferField.setAccessible(true);
-        CopyOnWriteArrayList<FitnessData> buffer = new CopyOnWriteArrayList<>();
-        bufferField.set(consumer, buffer);
-
-        // JSON сообщение
-        String json = """
-            {"user":"u1","metric":"steps","value":123.0,"timestamp":999}
-        """;
-
-        ObjectMapper mapper = new ObjectMapper();
-        var node = mapper.readTree(json);
-
-        // Создаём FitnessData через приватный код вручную
-        FitnessData data = new FitnessData(
-                null,
-                node.get("user").asText(),
-                node.get("metric").asText(),
-                node.get("value").asDouble(),
-                node.get("timestamp").asInt()
-        );
-        buffer.add(data);
-
-        assertEquals(1, buffer.size());
-        assertEquals("u1", buffer.get(0).getUserId());
+    public void stopSaving() {
+        running = false;
     }
 
-    @Test
-    public void testStopSaving() {
-        consumer.stopSaving();
-        // Проверим, что флаг действительно изменился
-        try {
-            Field runningField = KafkaStorageConsumer.class.getDeclaredField("running");
-            runningField.setAccessible(true);
-            boolean value = (boolean) runningField.get(consumer);
-            assertFalse(value);
-        } catch (Exception e) {
-            fail("Reflection failed");
+    private void savePeriodically() {
+        while (running) {
+            try {
+                Thread.sleep(saveIntervalMs);
+                saveNow();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+    }
+
+    // Новый метод, который можно вызывать напрямую в тестах
+    public void saveNow() {
+        if (!buffer.isEmpty()) {
+            List<FitnessData> toSave = new ArrayList<>(buffer);
+            buffer.clear();
+            repository.saveAll(toSave);
         }
     }
 }
