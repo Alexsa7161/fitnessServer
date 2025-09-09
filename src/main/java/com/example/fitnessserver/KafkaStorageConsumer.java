@@ -68,19 +68,25 @@ public class KafkaStorageConsumer {
         }
     }
 
-    private void savePeriodically() {
-        while (true) {
-            try {
-                Thread.sleep(60_00);
-                if (!buffer.isEmpty()) {
-                    List<FitnessData> toSave = new ArrayList<>(buffer);
-                    buffer.clear();
-                    repository.saveAll(toSave);
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
+private volatile boolean running = true; // флаг для остановки потока
+
+public void stopSaving() {
+    running = false;
+}
+
+private void savePeriodically() {
+    while (running) {  // теперь можно остановить цикл извне
+        try {
+            Thread.sleep(60_000); // исправил на 60_000 миллисекунд = 1 минута
+            if (!buffer.isEmpty()) {
+                List<FitnessData> toSave = new ArrayList<>(buffer);
+                buffer.clear();
+                repository.saveAll(toSave);
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            break; // выход из цикла при прерывании
         }
     }
+}
 }
