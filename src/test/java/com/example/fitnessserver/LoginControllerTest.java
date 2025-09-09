@@ -1,47 +1,44 @@
 package com.example.fitnessserver;
 
 import jakarta.servlet.http.HttpSession;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.ui.ConcurrentModel;
+import org.springframework.ui.Model;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@WebMvcTest(LoginController.class)
 public class LoginControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    private LoginController loginController;
     private HttpSession session;
+    private Model model;
 
-    // Заглушка шаблона
-    @Test
-    public void testShowLoginPage_stub() throws Exception {
-        mockMvc.perform(get("/login"))
-                .andExpect(status().isOk())
-                .andExpect(result -> {
-                });
+    @BeforeEach
+    void setUp() {
+        loginController = new LoginController();
+        session = mock(HttpSession.class);
+        model = new ConcurrentModel();
     }
 
     @Test
-    public void testProcessLoginWithEmptyUserId_stub() throws Exception {
-        mockMvc.perform(post("/login").param("user_id", ""))
-                .andExpect(status().isOk())
-                .andExpect(result -> {
-                });
+    void testShowLoginPage() {
+        String view = loginController.showLoginPage();
+        assertEquals("login", view, "Метод должен возвращать имя шаблона login");
     }
 
     @Test
-    public void testProcessLoginWithValidUserId_stub() throws Exception {
-        mockMvc.perform(post("/login").param("user_id", "user_1"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(result -> {
-                });
+    void testProcessLoginWithEmptyUserId() {
+        String view = loginController.processLogin("", session, model);
+        assertEquals("login", view, "При пустом userId должен вернуться login");
+        assertTrue(model.containsAttribute("error"), "В модели должно быть сообщение об ошибке");
+    }
+
+    @Test
+    void testProcessLoginWithValidUserId() {
+        String view = loginController.processLogin("user123", session, model);
+        assertEquals("redirect:/user", view, "При валидном userId должен быть редирект");
+        verify(session, times(1)).setAttribute(eq("user"), any(User.class));
     }
 }
