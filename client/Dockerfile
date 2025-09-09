@@ -1,20 +1,25 @@
 # frontend/Dockerfile (в папке fitnessServer/client)
 
+# Этап сборки фронтенда
 FROM node:20-alpine AS frontend-build
 WORKDIR /app
 
-# Копируем package.json и package-lock.json из текущей папки (client)
+# Копируем package.json и package-lock.json
 COPY package*.json ./
-
 RUN npm install
 
 # Копируем весь фронтенд-код
 COPY . ./
-
 RUN npm run build
 
+# Production-образ с nginx
 FROM nginx:stable-alpine
 
+# Создаём непользовательского пользователя для безопасности
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+# Копируем собранный фронтенд
 COPY --from=frontend-build /app/build /usr/share/nginx/html
 
 EXPOSE 80
