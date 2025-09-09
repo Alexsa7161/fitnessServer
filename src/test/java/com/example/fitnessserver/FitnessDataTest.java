@@ -58,10 +58,9 @@ public class FitnessDataTest {
         String str = data.toString();
 
         assertTrue(str.contains("id=1"));
-        assertTrue(str.contains("userId=user_123"));
-        assertTrue(str.contains("metric=steps"));
+        assertTrue(str.contains("userId='user_123'"));
+        assertTrue(str.contains("metric='steps'"));
         assertTrue(str.contains("value=1000.0"));
         assertTrue(str.contains("timestamp=123456789"));
     }
 }
-
