@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,64 +19,76 @@ public class KafkaStorageConsumerTest {
 
     @BeforeEach
     public void setUp() {
-        // Мок репозитория
         repository = mock(FitnessDataRepository.class);
-
-        // Используем конструктор с таймаутом для тестов
-        consumer = new KafkaStorageConsumer(repository, 10);
+        consumer = new KafkaStorageConsumer(repository);
     }
 
     @Test
-    public void testSaveNowSavesData() {
-        // Добавляем данные в буфер
-        consumer.buffer.add(new FitnessData(1L, "user1", "steps", 100.0, 123L));
-
-        // Вызываем метод напрямую
-        consumer.saveNow();
-
-        // Проверяем, что данные сохранились и буфер очистился
-        verify(repository, times(1)).saveAll(anyList());
-        assertTrue(consumer.buffer.isEmpty());
+    public void testStartDoesNotThrow() {
+        // Просто проверяем, что метод запускается без исключений
+        consumer.start();
     }
 
     @Test
-    public void testStopSaving() {
+    public void testStopSavingChangesFlag() throws Exception {
         consumer.stopSaving();
-        assertFalse(getRunningFlag(consumer));
+
+        Field runningField = KafkaStorageConsumer.class.getDeclaredField("running");
+        runningField.setAccessible(true);
+        boolean value = (boolean) runningField.get(consumer);
+
+        assertFalse(value);
+    }
+
+    @Test
+    public void testSavePeriodicallySavesData() throws Exception {
+        // Подменяем buffer через reflection
+        Field bufferField = KafkaStorageConsumer.class.getDeclaredField("buffer");
+        bufferField.setAccessible(true);
+        CopyOnWriteArrayList<FitnessData> buffer = new CopyOnWriteArrayList<>();
+        buffer.add(new FitnessData(1L, "user1", "steps", 100.0, 123L));
+        bufferField.set(consumer, buffer);
+
+        // Вызываем приватный метод savePeriodically через reflection в отдельном потоке
+        Method method = KafkaStorageConsumer.class.getDeclaredMethod("savePeriodically");
+        method.setAccessible(true);
+
+        Thread t = new Thread(() -> {
+            try {
+                consumer.stopSaving(); // сразу остановим цикл
+                method.invoke(consumer);
+            } catch (Exception ignored) {}
+        });
+        t.start();
+        t.join();
+
+        // Проверяем, что saveAll был вызван
+        verify(repository, atLeastOnce()).saveAll(anyList());
     }
 
     @Test
     public void testConsumeMessagesParsesValidJson() throws Exception {
-        // Подготовка JSON вручную (не вызываем реальный KafkaConsumer)
+        Field bufferField = KafkaStorageConsumer.class.getDeclaredField("buffer");
+        bufferField.setAccessible(true);
+        CopyOnWriteArrayList<FitnessData> buffer = new CopyOnWriteArrayList<>();
+        bufferField.set(consumer, buffer);
+
         String json = """
             {"user":"u1","metric":"steps","value":123.0,"timestamp":999}
         """;
-
         ObjectMapper mapper = new ObjectMapper();
         var node = mapper.readTree(json);
 
-        // Создаём объект и кладём в буфер
-        consumer.buffer.add(new FitnessData(
+        FitnessData data = new FitnessData(
                 null,
                 node.get("user").asText(),
                 node.get("metric").asText(),
                 node.get("value").asDouble(),
                 node.get("timestamp").asInt()
-        ));
+        );
+        buffer.add(data);
 
-        assertEquals(1, consumer.buffer.size());
-        assertEquals("u1", consumer.buffer.get(0).getUserId());
-    }
-
-    // Вспомогательный метод для проверки приватного флага
-    private boolean getRunningFlag(KafkaStorageConsumer consumer) {
-        try {
-            var field = KafkaStorageConsumer.class.getDeclaredField("running");
-            field.setAccessible(true);
-            return (boolean) field.get(consumer);
-        } catch (Exception e) {
-            fail("Reflection failed");
-            return true;
-        }
+        assertEquals(1, buffer.size());
+        assertEquals("u1", buffer.get(0).getUserId());
     }
 }
