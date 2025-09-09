@@ -7,18 +7,14 @@ import org.springframework.web.bind.annotation.SessionAttribute;
 
 @Controller
 public class UserController {
-
     @GetMapping("/user")
     public String userPage(@SessionAttribute(name = "user", required = false) User user, Model model) {
         if (user == null) {
-            return "redirect:/login";
-        }
-        if (user != null) {
-            model.addAttribute("userId", user.getUserId());
-        } else {
             model.addAttribute("userId", "Неизвестный пользователь");
+            return "redirect:/login"; // или просто return "user", если хочешь показать страницу
         }
 
+        model.addAttribute("userId", user.getUserId());
         return "user";
     }
 }
