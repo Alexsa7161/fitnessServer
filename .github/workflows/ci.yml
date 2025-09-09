@@ -140,6 +140,7 @@ jobs:
             echo "Waiting..."
             sleep 5
           done
+
   docker_push:
     runs-on: ubuntu-latest
     needs: build
@@ -155,13 +156,70 @@ jobs:
   
       - name: Build and push Docker image
         run: |
-          # Собираем образ с корректным тегом
           docker build -t alexsa7161/fitness-backend_from_ci:latest .
-          # Пушим в Docker Hub
           docker push alexsa7161/fitness-backend_from_ci:latest
-  cleanup:
+
+  sonar_scan:
     runs-on: ubuntu-latest
     needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG_DATA }}" > /tmp/kubeconfig
+          export KUBECONFIG=/tmp/kubeconfig
+          kubectl config view
+
+      - name: Delete old Sonar job
+        run: kubectl delete job sonar-scan -n fitness-app || echo "Job not found"
+
+      - name: Apply SonarQube job
+        run: kubectl apply -f sonar-job.yaml
+
+      - name: Wait for SonarQube job to finish
+        run: |
+          JOB_NAME=sonar-scan
+          NAMESPACE=fitness-app
+          TIMEOUT=300
+          ELAPSED=0
+          while [[ $(kubectl get job $JOB_NAME -n $NAMESPACE -o jsonpath='{.status.succeeded}') != "1" ]]; do
+            if [ $ELAPSED -ge $TIMEOUT ]; then
+              echo "Timeout waiting for SonarQube job"
+              exit 1
+            fi
+            echo "Waiting for SonarQube job..."
+            sleep 5
+            ELAPSED=$((ELAPSED+5))
+          done
+
+      - name: Check Sonar Quality Gate and Coverage
+        run: |
+          SONAR_HOST_URL="https://sonar.example.com"
+          SONAR_PROJECT_KEY="fitness-app"
+          SONAR_TOKEN="sqa_756c1fb709d72097bea52b144e5f019ded725cbd"
+
+          RESPONSE=$(curl -s -u $SONAR_TOKEN: "$SONAR_HOST_URL/api/qualitygates/project_status?projectKey=$SONAR_PROJECT_KEY")
+          STATUS=$(echo $RESPONSE | jq -r '.projectStatus.status')
+          COVERAGE=$(echo $RESPONSE | jq -r '.projectStatus.conditions[] | select(.metric=="coverage") | .value' | sed 's/%//')
+
+          echo "Quality Gate Status: $STATUS"
+          echo "Coverage: $COVERAGE%"
+
+          if [ "$STATUS" != "OK" ]; then
+            echo "❌ SonarQube Quality Gate failed"
+            exit 1
+          fi
+
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "❌ Code coverage is below 80%"
+            exit 1
+          fi
+
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: [test, sonar_scan]
     if: always()
     steps:
       - name: Checkout code
