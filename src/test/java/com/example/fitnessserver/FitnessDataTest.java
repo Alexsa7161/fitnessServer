@@ -39,21 +39,29 @@ public class FitnessDataTest {
         FitnessData d2 = new FitnessData(1L, "user_1", "steps", 1000.0, 111L);
         FitnessData d3 = new FitnessData(2L, "user_2", "calories", 200.0, 222L);
 
+        // Проверяем equals и hashCode
         assertEquals(d1, d2);
         assertEquals(d1.hashCode(), d2.hashCode());
 
         assertNotEquals(d1, d3);
         assertNotEquals(d1.hashCode(), d3.hashCode());
+
+        // Проверка reflexivity и null
+        assertEquals(d1, d1);
+        assertNotEquals(d1, null);
+        assertNotEquals(d1, "some string");
     }
 
     @Test
-    public void testToStringContainsFields() {
+    public void testToStringContainsAllFields() {
         FitnessData data = new FitnessData(1L, "user_123", "steps", 1000.0, 123456789L);
         String str = data.toString();
 
-        assertTrue(str.contains("user_123"));
-        assertTrue(str.contains("steps"));
-        assertTrue(str.contains("1000.0"));
-        assertTrue(str.contains("123456789"));
+        assertTrue(str.contains("id=1"));
+        assertTrue(str.contains("userId=user_123"));
+        assertTrue(str.contains("metric=steps"));
+        assertTrue(str.contains("value=1000.0"));
+        assertTrue(str.contains("timestamp=123456789"));
     }
 }
+
