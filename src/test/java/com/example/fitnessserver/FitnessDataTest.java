@@ -47,12 +47,13 @@ public class FitnessDataTest {
     }
 
     @Test
-    public void testToString() {
+    public void testToStringContainsFields() {
         FitnessData data = new FitnessData(1L, "user_123", "steps", 1000.0, 123456789L);
         String str = data.toString();
 
         assertTrue(str.contains("user_123"));
         assertTrue(str.contains("steps"));
         assertTrue(str.contains("1000.0"));
+        assertTrue(str.contains("123456789"));
     }
 }
