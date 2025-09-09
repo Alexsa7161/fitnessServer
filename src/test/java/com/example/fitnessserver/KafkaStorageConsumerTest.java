@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
 
 public class KafkaStorageConsumerTest {
 
@@ -14,33 +15,11 @@ public class KafkaStorageConsumerTest {
 
     @BeforeEach
     public void setUp() {
-        // Можно оставить мок или null, метод saveAll не будет реально выполняться
-        repository = new FitnessDataRepository() {
-            @Override
-            public <S extends FitnessData> S save(S entity) {
-                return entity; // просто возвращаем объект
-            }
+        // Создаём мок через Mockito, чтобы не реализовывать интерфейс вручную
+        repository = mock(FitnessDataRepository.class);
 
-            @Override
-            public <S extends FitnessData> List<S> saveAll(Iterable<S> entities) {
-                return (List<S>) entities; // просто возвращаем список
-            }
-
-            @Override
-            public List<FitnessData> findByUserId(String userId) {
-                return List.of();
-            }
-
-            @Override
-            public java.util.Optional<FitnessData> findById(Long aLong) {
-                return java.util.Optional.empty();
-            }
-
-            @Override
-            public void deleteById(Long aLong) {
-                // пусто
-            }
-        };
+        // Заглушка для saveAll
+        when(repository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
 
         consumer = new KafkaStorageConsumer(repository);
     }
@@ -48,7 +27,7 @@ public class KafkaStorageConsumerTest {
     @Test
     public void testStartRunsWithoutException() {
         try {
-            consumer.start();
+            consumer.start(); // запускаем, не трогаем private методы
         } catch (Exception ignored) {
         }
         assertTrue(true);
@@ -65,14 +44,14 @@ public class KafkaStorageConsumerTest {
 
     @Test
     public void testRepositoryCallsSafe() {
-        // Вызываем методы репозитория, просто для покрытия
+        // Просто вызываем методы репозитория для покрытия
         repository.save(new FitnessData(1L, "u", "m", 1.0, 123L));
         repository.saveAll(List.of(new FitnessData(2L, "u2", "m2", 2.0, 456L)));
         repository.deleteById(1L);
         repository.findByUserId("u");
         repository.findById(1L);
 
-        assertTrue(true); // тест проходит
+        assertTrue(true);
     }
 
     @Test
