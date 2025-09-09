@@ -36,14 +36,15 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    public void sendToUser(String userId, String message) {
-        WebSocketSession session = sessions.get(userId);
-        if (session != null && session.isOpen()) {
-            try {
-                session.sendMessage(new TextMessage(message));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+public void sendToUser(String userId, String message) {
+    WebSocketSession session = sessions.get(userId);
+    if (session != null && session.isOpen()) {
+        try {
+            session.sendMessage(new TextMessage(message));
+        } catch (IOException e) {
+            // Log the exception properly instead of printing stack trace
+            logger.error("Failed to send WebSocket message to user " + userId, e);
         }
     }
+}
 }
