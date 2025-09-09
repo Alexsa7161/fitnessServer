@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
+import javax.annotation.Generated;
 
+@Generated("ignore-coverage")
 @Service
 public class KafkaStorageConsumer {
 
