@@ -11,10 +11,10 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
-import javax.annotation.Generated;
 
-@Generated("ignore-coverage")
+// $COVERAGE-IGNORE$
 @Service
+// $COVERAGE-IGNORE$
 public class KafkaStorageConsumer {
 
     private final FitnessDataRepository repository;
