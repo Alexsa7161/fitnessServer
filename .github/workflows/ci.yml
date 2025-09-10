@@ -161,33 +161,39 @@ jobs:
 
   sonar_scan:
     runs-on: ubuntu-latest
-    needs: test
+    needs: test   # зависит от успешного прохождения сборки и тестов
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
   
+      # 1️⃣ Настройка kubeconfig
       - name: Set kubeconfig
         run: |
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG_DATA }}" > $HOME/.kube/config
   
-      - name: Delete old Sonar job (ignore if not exists)
+      # 2️⃣ Удаление старой SonarQube job
+      - name: Delete old SonarQube job (ignore if not exists)
         run: kubectl delete job sonar-scan -n fitness-app || echo "Job not found"
   
+      # 3️⃣ Применение новой SonarQube job
       - name: Apply SonarQube job
         run: kubectl apply -f yc-k8s-deploy/fitnessServer/sonar-job.yaml
   
+      # 4️⃣ Ожидание завершения job
       - name: Wait for SonarQube job to finish
         run: |
           JOB_NAME=sonar-scan
           NAMESPACE=fitness-app
           kubectl wait --for=condition=complete --timeout=600s job/$JOB_NAME -n $NAMESPACE
   
+      # 5️⃣ Port-forward для доступа к SonarQube
       - name: Port-forward SonarQube
         run: |
           nohup kubectl port-forward svc/sonarqube 9000:9000 -n fitness-app > port-forward.log 2>&1 &
           sleep 10
   
+      # 6️⃣ Проверка Quality Gate и покрытия
       - name: Check Sonar Quality Gate and Coverage
         run: |
           SONAR_HOST_URL="http://localhost:9000"
@@ -211,6 +217,7 @@ jobs:
             echo "❌ Code coverage is below 80%"
             exit 1
           fi
+
 
 
   cleanup:
