@@ -175,7 +175,8 @@ jobs:
   
       # 2️⃣ Удаление старой SonarQube job (если есть)
       - name: Delete old SonarQube job (ignore if not exists)
-        run: kubectl delete job sonar-scan -n fitness-app || echo "Job not found"
+        run: |
+          kubectl delete job sonar-scan -n fitness-app || echo "Job not found"
   
       # 3️⃣ Применение новой SonarQube job
       - name: Apply SonarQube job
@@ -187,15 +188,16 @@ jobs:
           JOB_NAME=sonar-scan
           NAMESPACE=fitness-app
           kubectl wait --for=condition=complete --timeout=600s job/$JOB_NAME -n $NAMESPACE
+          echo "✅ SonarQube job completed"
   
       # 5️⃣ Проверка Quality Gate и покрытия
       - name: Check Sonar Quality Gate and Coverage
         run: |
-          SONAR_HOST_URL="http://localhost:9000"
+          SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}" # например https://sonar.example.com
           SONAR_PROJECT_KEY="fitness-app"
           SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
   
-          RESPONSE=$(curl -s -u $SONAR_TOKEN: "$SONAR_HOST_URL/api/qualitygates/project_status?projectKey=$SONAR_PROJECT_KEY")
+          RESPONSE=$(curl -s -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/qualitygates/project_status?projectKey=$SONAR_PROJECT_KEY")
   
           STATUS=$(echo "$RESPONSE" | jq -r '.projectStatus.status')
           COVERAGE=$(echo "$RESPONSE" | jq -r '.projectStatus.conditions[] | select(.metricKey=="new_coverage") | .actualValue')
@@ -212,6 +214,9 @@ jobs:
             echo "❌ Code coverage is below 80%"
             exit 1
           fi
+  
+          echo "✅ SonarQube Quality Gate passed and coverage is OK"
+
 
 
 
