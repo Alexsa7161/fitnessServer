@@ -168,31 +168,20 @@ jobs:
 
       - name: Set kubeconfig
         run: |
-          echo "${{ secrets.KUBECONFIG_DATA }}" > /tmp/kubeconfig
-          export KUBECONFIG=/tmp/kubeconfig
-          kubectl config view
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > $HOME/.kube/config
 
       - name: Delete old Sonar job
         run: kubectl delete job sonar-scan -n fitness-app || echo "Job not found"
 
       - name: Apply SonarQube job
-        run: kubectl apply -f sonar-job.yaml
+        run: kubectl apply -f yc-k8s-deploy/fitnessServer/sonar-job.yaml
 
       - name: Wait for SonarQube job to finish
         run: |
           JOB_NAME=sonar-scan
           NAMESPACE=fitness-app
-          TIMEOUT=300
-          ELAPSED=0
-          while [[ $(kubectl get job $JOB_NAME -n $NAMESPACE -o jsonpath='{.status.succeeded}') != "1" ]]; do
-            if [ $ELAPSED -ge $TIMEOUT ]; then
-              echo "Timeout waiting for SonarQube job"
-              exit 1
-            fi
-            echo "Waiting for SonarQube job..."
-            sleep 5
-            ELAPSED=$((ELAPSED+5))
-          done
+          kubectl wait --for=condition=complete --timeout=300s job/$JOB_NAME -n $NAMESPACE
 
       - name: Check Sonar Quality Gate and Coverage
         run: |
