@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sonar-scan
+  namespace: fitness-app
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: sonar-scanner
+          image: maven:3.9.3-eclipse-temurin-17
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              echo "=== Клонируем проект ==="
+              git clone https://github.com/Alexsa7161/fitnessServer.git /workspace
+              cd /workspace
+
+              echo "=== Ждём Postgres 30 секунд ==="
+              sleep 30
+
+              echo "=== Запускаем тесты с Jacoco XML ==="
+              mvn clean verify jacoco:report \
+                -Dspring.datasource.url=jdbc:postgresql://postgres.fitness-app.svc.cluster.local:5432/postgres \
+                -Dspring.datasource.username=postgres \
+                -Dspring.datasource.password=postgres
+
+              echo "=== Проверяем наличие Jacoco XML ==="
+              if [ -f /workspace/target/site/jacoco/jacoco.xml ]; then
+                echo "Jacoco XML найден"
+              else
+                echo "Jacoco XML НЕ найден"
+                exit 1
+              fi
+
+              echo "=== Запускаем анализ SonarQube ==="
+              mvn sonar:sonar \
+                -Dsonar.projectKey=fitness-app \
+                -Dsonar.host.url=http://sonarqube:9000 \
+                -Dsonar.login=sqa_756c1fb709d72097bea52b144e5f019ded725cbd \
+                -Dsonar.projectBaseDir=/workspace \
+                -Dsonar.sources=src/main/java \
+                -Dsonar.tests=src/test/java \
+                -Dsonar.exclusions=**/target/** \
+                -Dsonar.coverage.jacoco.xmlReportPaths=/workspace/target/site/jacoco/jacoco.xml
