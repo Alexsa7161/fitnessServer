@@ -181,17 +181,24 @@ jobs:
         run: |
           JOB_NAME=sonar-scan
           NAMESPACE=fitness-app
-          kubectl wait --for=condition=complete --timeout=300s job/$JOB_NAME -n $NAMESPACE
+          kubectl wait --for=condition=complete --timeout=600s job/$JOB_NAME -n $NAMESPACE
+
+      - name: Port-forward SonarQube
+        run: kubectl port-forward svc/sonarqube 9000:9000 -n fitness-app &
+      
+      - name: Wait for SonarQube port-forward
+        run: sleep 10
 
       - name: Check Sonar Quality Gate and Coverage
         run: |
-          SONAR_HOST_URL="https://sonar.example.com"
+          SONAR_HOST_URL="http://localhost:9000"
           SONAR_PROJECT_KEY="fitness-app"
           SONAR_TOKEN="sqa_756c1fb709d72097bea52b144e5f019ded725cbd"
 
           RESPONSE=$(curl -s -u $SONAR_TOKEN: "$SONAR_HOST_URL/api/qualitygates/project_status?projectKey=$SONAR_PROJECT_KEY")
+
           STATUS=$(echo $RESPONSE | jq -r '.projectStatus.status')
-          COVERAGE=$(echo $RESPONSE | jq -r '.projectStatus.conditions[] | select(.metric=="coverage") | .value' | sed 's/%//')
+          COVERAGE=$(echo $RESPONSE | jq -r '.projectStatus.conditions[] | select(.metricKey=="new_coverage") | .actualValue')
 
           echo "Quality Gate Status: $STATUS"
           echo "Coverage: $COVERAGE%"
