@@ -159,102 +159,102 @@ jobs:
   #         docker build -t alexsa7161/fitness-backend_from_ci:latest .
   #         docker push alexsa7161/fitness-backend_from_ci:latest
 
-  # sonar_scan:
-  #   runs-on: ubuntu-latest
-  #   # needs: test
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
+  sonar_scan:
+    runs-on: ubuntu-latest
+    # needs: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  #     - name: Set up kubeconfig
-  #       run: |
-  #         echo "Step 1: Create .kube directory"
-  #         mkdir -p $HOME/.kube
+      - name: Set up kubeconfig
+        run: |
+          echo "Step 1: Create .kube directory"
+          mkdir -p $HOME/.kube
       
-  #         echo "Step 2: Write kubeconfig YAML"
-  #         cat > $HOME/.kube/config <<EOF
-  #         apiVersion: v1
-  #         kind: Config
-  #         clusters:
-  #         - name: my-cluster
-  #           cluster:
-  #             server: https://46.21.244.175
-  #             certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM1ekNDQWMrZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJMU1Ea3dNakEzTlRrMU5Gb1hEVE0xTURnek1UQTNOVGsxTkZvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTUZWCks4cGNjUFZZS2FRV1BvQ3JtTTRmem11K2RZZnlOU1c1M1Bsck1aTXFPQW1wSzVYWUF0WjdRd0xHREJmZGN3N2MKaFUzRjYxT1hiNHFla1FXNVpsQmQvNEVFdTNwQ21DRkxnQm1VSFpIRUNmei9CdXliTUdnSnBOUmJERG50SHJyYQpSOEdGWXpQb2o0WGJwZU9aUy94OWRlN2l5ZTJvUXk1RGwvQXNINnF5ZTZBUnpKbUk3QkxSZEJFaTFwcUVoWXVVCnlFRm9ISmFrZm5Pd3lwRkIwdDRvcGhGV1JpTlpmK013ZlFIamM2Mkp0TmhRbHQ3aVh6SXNwYSt1dzlxYkp6OFoKLzExWjFSbXVtd1BmbnljeXFCQmcyZ2Ivc0xDVzgwbTFTOHBxSS9IWG82WHFWclNpOFdKTWlPYkZkVzVhdC9pRQpPTHVoc1pVVVdybW9hbGxJRjAwQ0F3RUFBYU5DTUVBd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0hRWURWUjBPQkJZRUZBRWFZZzlnKzNtclluTGRHbmE4VkJXbC9tVzJNQTBHQ1NxR1NJYjMKRFFFQkN3VUFBNElCQVFBK3RhdWdxUEV5akVHVnA4RlNSOWxoU1JKVTVYWllxVGxrQVhNaW9ZbFFFWEsrZXFwUApmbXlyLzBETlo0S0pLdm1Bcjk0ditGWnlOZFRIYVlmK3JzSG9KYUl5LzZTcVNkMk8yVVlaaWV3Zy8yemFYRy9pCm5keEQ4bm0rTzVoQ3d4ajF5YkJ5ZlhmQ2NZZUVIZUU5eldRMjJRdXIybVFLeHB2QmJ6Ly9aZ21pRGNmbld0dE4KQmJjQ080Z09xR3pFYVQwTThOOTBHNlpOWHhma0kyTDZrZnZnekQ3cm5SZmZ0MVk1Q1lZZC9vdi9kbHI0ZTFURwpub1F5ZGR3UkpPVG5BWmZyeWtoQ3dlM3JSS3hOTzRwUW82OHZ4WUVsbzZNZGpSdHFYcVdKRVJGWkVVM2h3SDRxClp4aXdMZWZXTlJ3K3B5akp0aXRDQVFiVkNMQUp3czFGY2RxSwotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
-  #         users:
-  #         - name: github-actions
-  #           user:
-  #             token: eyJhbGciOiJSUzI1NiIsImtpZCI6ImktX2JzcTNQeWFqRWtsUnNpamozY0IyTlZfX19hMGFFd1NrUkFkeFR0STQifQ.eyJhdWQiOlsia3ViZXJuZXRlcy5kZWZhdWx0LnN2YyJdLCJleHAiOjE3NTc1OTkzMzMsImlhdCI6MTc1NzU5NTczMywiaXNzIjoia3ViZXJuZXRlcy5kZWZhdWx0LnN2YyIsImp0aSI6IjNkMWE2NzIwLTIwNjktNGJmZC1iOTc5LWMwYTlmOGZjNTBiYSIsImt1YmVybmV0ZXMuaW8iOnsibmFtZXNwYWNlIjoiZml0bmVzcy1hcHAiLCJzZXJ2aWNlYWNjb3VudCI6eyJuYW1lIjoiZ2l0aHViLWFjdGlvbnMtc2EiLCJ1aWQiOiIyM2NmMTU0ZS1mN2YwLTRlOTYtODQ3MC01MDBmZTM1ZjM1ZmMifX0sIm5iZiI6MTc1NzU5NTczMywic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmZpdG5lc3MtYXBwOmdpdGh1Yi1hY3Rpb25zLXNhIn0.mUlAucEtKONzZ3IdXgoh-7TGoPSAsnlD0KJI-R9t9DVsC9m-7ssuetgRP-k4ELfhm69KU1m51EQrnPU8kk3ZGhokgcwCz2IA_eHsHphlNGNGiG6YYgwuyjekOQ9herW5vtDdZNJy5chB1gaoQGHSq_SpQwM4d7WPxm62kSDZPmSAcnvXYC4p0uJ87uj3BC2mI5y5avfVQornroCGktGA1ibg2K8IzjDZxoa_y7PXbJ9O_CiITZEVTcVBp05bWMN509m6hbbGV3pmf2_dc6DZm-08T5VFsOTwSyFUd4vYABaem-oF8-AbD7JtORelkQ2X6YCSsaI3_DRV4ZSzBwJAaw
-  #         contexts:
-  #         - name: github-actions
-  #           context:
-  #             cluster: my-cluster
-  #             user: github-actions
-  #             namespace: fitness-app
-  #         current-context: github-actions
-  #         EOF
+          echo "Step 2: Write kubeconfig YAML"
+          cat > $HOME/.kube/config <<EOF
+          apiVersion: v1
+          kind: Config
+          clusters:
+          - name: my-cluster
+            cluster:
+              server: https://46.21.244.175
+              certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM1ekNDQWMrZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJMU1Ea3dNakEzTlRrMU5Gb1hEVE0xTURnek1UQTNOVGsxTkZvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTUZWCks4cGNjUFZZS2FRV1BvQ3JtTTRmem11K2RZZnlOU1c1M1Bsck1aTXFPQW1wSzVYWUF0WjdRd0xHREJmZGN3N2MKaFUzRjYxT1hiNHFla1FXNVpsQmQvNEVFdTNwQ21DRkxnQm1VSFpIRUNmei9CdXliTUdnSnBOUmJERG50SHJyYQpSOEdGWXpQb2o0WGJwZU9aUy94OWRlN2l5ZTJvUXk1RGwvQXNINnF5ZTZBUnpKbUk3QkxSZEJFaTFwcUVoWXVVCnlFRm9ISmFrZm5Pd3lwRkIwdDRvcGhGV1JpTlpmK013ZlFIamM2Mkp0TmhRbHQ3aVh6SXNwYSt1dzlxYkp6OFoKLzExWjFSbXVtd1BmbnljeXFCQmcyZ2Ivc0xDVzgwbTFTOHBxSS9IWG82WHFWclNpOFdKTWlPYkZkVzVhdC9pRQpPTHVoc1pVVVdybW9hbGxJRjAwQ0F3RUFBYU5DTUVBd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0hRWURWUjBPQkJZRUZBRWFZZzlnKzNtclluTGRHbmE4VkJXbC9tVzJNQTBHQ1NxR1NJYjMKRFFFQkN3VUFBNElCQVFBK3RhdWdxUEV5akVHVnA4RlNSOWxoU1JKVTVYWllxVGxrQVhNaW9ZbFFFWEsrZXFwUApmbXlyLzBETlo0S0pLdm1Bcjk0ditGWnlOZFRIYVlmK3JzSG9KYUl5LzZTcVNkMk8yVVlaaWV3Zy8yemFYRy9pCm5keEQ4bm0rTzVoQ3d4ajF5YkJ5ZlhmQ2NZZUVIZUU5eldRMjJRdXIybVFLeHB2QmJ6Ly9aZ21pRGNmbld0dE4KQmJjQ080Z09xR3pFYVQwTThOOTBHNlpOWHhma0kyTDZrZnZnekQ3cm5SZmZ0MVk1Q1lZZC9vdi9kbHI0ZTFURwpub1F5ZGR3UkpPVG5BWmZyeWtoQ3dlM3JSS3hOTzRwUW82OHZ4WUVsbzZNZGpSdHFYcVdKRVJGWkVVM2h3SDRxClp4aXdMZWZXTlJ3K3B5akp0aXRDQVFiVkNMQUp3czFGY2RxSwotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+          users:
+          - name: github-actions
+            user:
+              token: eyJhbGciOiJSUzI1NiIsImtpZCI6ImktX2JzcTNQeWFqRWtsUnNpamozY0IyTlZfX19hMGFFd1NrUkFkeFR0STQifQ.eyJhdWQiOlsia3ViZXJuZXRlcy5kZWZhdWx0LnN2YyJdLCJleHAiOjE3NTc1OTkzMzMsImlhdCI6MTc1NzU5NTczMywiaXNzIjoia3ViZXJuZXRlcy5kZWZhdWx0LnN2YyIsImp0aSI6IjNkMWE2NzIwLTIwNjktNGJmZC1iOTc5LWMwYTlmOGZjNTBiYSIsImt1YmVybmV0ZXMuaW8iOnsibmFtZXNwYWNlIjoiZml0bmVzcy1hcHAiLCJzZXJ2aWNlYWNjb3VudCI6eyJuYW1lIjoiZ2l0aHViLWFjdGlvbnMtc2EiLCJ1aWQiOiIyM2NmMTU0ZS1mN2YwLTRlOTYtODQ3MC01MDBmZTM1ZjM1ZmMifX0sIm5iZiI6MTc1NzU5NTczMywic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmZpdG5lc3MtYXBwOmdpdGh1Yi1hY3Rpb25zLXNhIn0.mUlAucEtKONzZ3IdXgoh-7TGoPSAsnlD0KJI-R9t9DVsC9m-7ssuetgRP-k4ELfhm69KU1m51EQrnPU8kk3ZGhokgcwCz2IA_eHsHphlNGNGiG6YYgwuyjekOQ9herW5vtDdZNJy5chB1gaoQGHSq_SpQwM4d7WPxm62kSDZPmSAcnvXYC4p0uJ87uj3BC2mI5y5avfVQornroCGktGA1ibg2K8IzjDZxoa_y7PXbJ9O_CiITZEVTcVBp05bWMN509m6hbbGV3pmf2_dc6DZm-08T5VFsOTwSyFUd4vYABaem-oF8-AbD7JtORelkQ2X6YCSsaI3_DRV4ZSzBwJAaw
+          contexts:
+          - name: github-actions
+            context:
+              cluster: my-cluster
+              user: github-actions
+              namespace: fitness-app
+          current-context: github-actions
+          EOF
       
-  #         echo "Step 3: Verify kubeconfig"
-  #         kubectl config get-contexts
-  #         kubectl config current-context
-  #         kubectl get nodes
+          echo "Step 3: Verify kubeconfig"
+          kubectl config get-contexts
+          kubectl config current-context
+          kubectl get nodes
 
 
   
-  #     - name: Delete old SonarQube job (ignore if not exists)
-  #       run: |
-  #         kubectl delete job sonar-scan -n fitness-app || echo "Job not found"
+      - name: Delete old SonarQube job (ignore if not exists)
+        run: |
+          kubectl delete job sonar-scan -n fitness-app || echo "Job not found"
   
-  #     - name: Apply SonarQube job
-  #       run: kubectl apply -f ./sonar-job.yaml
+      - name: Apply SonarQube job
+        run: kubectl apply -f ./sonar-job.yaml
 
-  #     - name: Wait for SonarQube job to finish
-  #       run: |
-  #         JOB_NAME=sonar-scan
-  #         NAMESPACE=fitness-app
-  #         kubectl wait --for=condition=complete --timeout=600s job/$JOB_NAME -n $NAMESPACE
-  #         echo "SonarQube job completed"
+      - name: Wait for SonarQube job to finish
+        run: |
+          JOB_NAME=sonar-scan
+          NAMESPACE=fitness-app
+          kubectl wait --for=condition=complete --timeout=600s job/$JOB_NAME -n $NAMESPACE
+          echo "SonarQube job completed"
 
 
           
-  #     - name: Check Sonar Quality Gate and Coverage
-  #       run: |
-  #         SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}" # например https://sonar.example.com
-  #         SONAR_PROJECT_KEY="fitness-app"
-  #         SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
+      - name: Check Sonar Quality Gate and Coverage
+        run: |
+          SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}" # например https://sonar.example.com
+          SONAR_PROJECT_KEY="fitness-app"
+          SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
   
-  #         echo "Fetching SonarQube metrics..."
-  #         RESPONSE=$(curl -s -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/measures/component?component=$SONAR_PROJECT_KEY&metricKeys=coverage,bugs,vulnerabilities")
+          echo "Fetching SonarQube metrics..."
+          RESPONSE=$(curl -s -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/measures/component?component=$SONAR_PROJECT_KEY&metricKeys=coverage,bugs,vulnerabilities")
       
-  #         COVERAGE=$(echo "$RESPONSE" | jq -r '.component.measures[] | select(.metric=="coverage") | .value')
-  #         BUGS=$(echo "$RESPONSE" | jq -r '.component.measures[] | select(.metric=="bugs") | .value')
-  #         VULNERABILITIES=$(echo "$RESPONSE" | jq -r '.component.measures[] | select(.metric=="vulnerabilities") | .value')
+          COVERAGE=$(echo "$RESPONSE" | jq -r '.component.measures[] | select(.metric=="coverage") | .value')
+          BUGS=$(echo "$RESPONSE" | jq -r '.component.measures[] | select(.metric=="bugs") | .value')
+          VULNERABILITIES=$(echo "$RESPONSE" | jq -r '.component.measures[] | select(.metric=="vulnerabilities") | .value')
       
-  #         echo "Coverage: $COVERAGE%"
-  #         echo "Bugs: $BUGS"
-  #         echo "Vulnerabilities: $VULNERABILITIES"
+          echo "Coverage: $COVERAGE%"
+          echo "Bugs: $BUGS"
+          echo "Vulnerabilities: $VULNERABILITIES"
       
-  #         # Проверка условий
-  #         if (( $(echo "$COVERAGE < 80" | bc -l) )); then
-  #           echo "❌ Code coverage is below 80%"
-  #           exit 1
-  #         fi
+          # Проверка условий
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "❌ Code coverage is below 80%"
+            exit 1
+          fi
       
-  #         if [ "$BUGS" != "0" ]; then
-  #           echo "❌ There are $BUGS bugs in the project"
-  #           exit 1
-  #         fi
+          if [ "$BUGS" != "0" ]; then
+            echo "❌ There are $BUGS bugs in the project"
+            exit 1
+          fi
       
-  #         if [ "$VULNERABILITIES" != "0" ]; then
-  #           echo "❌ There are $VULNERABILITIES vulnerabilities in the project"
-  #           exit 1
-  #         fi
+          if [ "$VULNERABILITIES" != "0" ]; then
+            echo "❌ There are $VULNERABILITIES vulnerabilities in the project"
+            exit 1
+          fi
       
-  #         echo "✅ SonarQube metrics check passed: coverage ≥ 80, 0 bugs, 0 vulnerabilities"
+          echo "✅ SonarQube metrics check passed: coverage ≥ 80, 0 bugs, 0 vulnerabilities"
 
           
   deploy:
     runs-on: ubuntu-latest
-    # needs: sonar_scan
+    needs: sonar_scan
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
