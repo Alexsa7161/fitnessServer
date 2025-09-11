@@ -166,21 +166,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set kubeconfig with debug
+      - name: Set up kubeconfig and test connection
         run: |
+          echo "Step 1: Create .kube directory"
           mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
+      
+          echo "Step 2: Decode kubeconfig from secret"
+          echo "${{ secrets.KUBECONFIG_B64 }}" | base64 --decode > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
       
-          echo "Check config contents (first 20 lines)"
+          echo "Step 3: Show first 20 lines of kubeconfig for debug"
           head -n 20 $HOME/.kube/config
       
-          echo "Set current context"
+          echo "Step 4: List contexts"
+          kubectl config get-contexts
+      
+          echo "Step 5: Show current context"
+          kubectl config current-context || echo "NO CURRENT CONTEXT"
+      
+          echo "Step 6: Set current context to github-actions"
           kubectl config use-context github-actions
       
-          echo "Check context"
-          kubectl config current-context
-          kubectl get pods -n fitness-app
+          echo "Step 7: Verify connection by listing nodes"
+          kubectl get nodes
+
 
   
       - name: Delete old SonarQube job (ignore if not exists)
