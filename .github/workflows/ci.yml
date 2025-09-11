@@ -216,7 +216,7 @@ jobs:
 
       - name: Parse coverage
         run: |
-          COVERAGE=$(xmllint --xpath "string(//counter[@type='LINE']/@covered/@ratio)" target/site/jacoco/jacoco.xml)
+          COVERAGE=$(grep -oP 'line rate="\K[0-9.]+' target/site/jacoco/jacoco.xml | head -1)
           echo "Coverage: $COVERAGE"
           if (( $(echo "$COVERAGE < 0.8" | bc -l) )); then
             echo "Coverage below 80%"
