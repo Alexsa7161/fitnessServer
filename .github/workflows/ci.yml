@@ -169,10 +169,9 @@ jobs:
       - name: Set kubeconfig
         run: |
           mkdir -p $HOME/.kube
-          cat <<'EOF' > $HOME/.kube/config
-          ${{ secrets.KUBECONFIG_DATA }}
-          EOF
+          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
+          kubectl get nodes
   
       # 2️⃣ Удаление старой SonarQube job (если есть)
       - name: Delete old SonarQube job (ignore if not exists)
