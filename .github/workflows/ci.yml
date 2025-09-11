@@ -169,9 +169,9 @@ jobs:
       - name: Set kubeconfig
         run: |
           mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
+          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
-          kubectl get nodes
+          kubectl get pods -n fitness-app
   
       - name: Delete old SonarQube job (ignore if not exists)
         run: |
