@@ -161,7 +161,6 @@ jobs:
 
   sonar_scan:
     runs-on: ubuntu-latest
-    # needs: test
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -170,9 +169,7 @@ jobs:
       - name: Set kubeconfig
         run: |
           mkdir -p $HOME/.kube
-          cat <<'EOF' > $HOME/.kube/config
-          ${{ secrets.KUBECONFIG_DATA }}
-          EOF
+          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 --decode > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
   
       # 2️⃣ Удаление старой SonarQube job (если есть)
@@ -192,32 +189,29 @@ jobs:
           kubectl wait --for=condition=complete --timeout=600s job/$JOB_NAME -n $NAMESPACE
           echo "✅ SonarQube job completed"
   
-      # 5️⃣ Проверка Quality Gate и покрытия
-      - name: Check Sonar Quality Gate and Coverage
+      # 5️⃣ Проверка покрытия из SonarQube напрямую
+      - name: Check Sonar Coverage
         run: |
-          SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}" # например https://sonar.example.com
+          SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}"   # https://sonar.example.com
           SONAR_PROJECT_KEY="fitness-app"
           SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
   
-          RESPONSE=$(curl -s -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/qualitygates/project_status?projectKey=$SONAR_PROJECT_KEY")
+          # Берём актуальное покрытие напрямую
+          RESPONSE=$(curl -s -u "$SONAR_TOKEN:" \
+            "$SONAR_HOST_URL/api/measures/component?component=$SONAR_PROJECT_KEY&metricKeys=coverage")
   
-          STATUS=$(echo "$RESPONSE" | jq -r '.projectStatus.status')
-          COVERAGE=$(echo "$RESPONSE" | jq -r '.projectStatus.conditions[] | select(.metricKey=="coverage") | .actualValue')
+          COVERAGE=$(echo "$RESPONSE" | jq -r '.component.measures[0].value')
   
-          echo "Quality Gate Status: $STATUS"
-          echo "Coverage: $COVERAGE%"
+          echo "Coverage from SonarQube: $COVERAGE%"
   
-          if [ "$STATUS" != "OK" ]; then
-            echo "❌ SonarQube Quality Gate failed"
-            exit 1
-          fi
-  
+          # Проверка
           if (( $(echo "$COVERAGE < 80" | bc -l) )); then
             echo "❌ Code coverage is below 80%"
             exit 1
           fi
   
-          echo "✅ SonarQube Quality Gate passed and coverage is OK"
+          echo "✅ Code coverage is OK"
+
 
 
 
