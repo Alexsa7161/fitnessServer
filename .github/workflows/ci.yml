@@ -166,28 +166,36 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up kubeconfig and test connection
+      - name: Set up kubeconfig
         run: |
           echo "Step 1: Create .kube directory"
           mkdir -p $HOME/.kube
       
-          echo "Step 2: Decode kubeconfig from secret"
-          echo "${{ secrets.KUBECONFIG_B64 }}" | base64 --decode > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
+          echo "Step 2: Write kubeconfig YAML"
+          cat > $HOME/.kube/config <<EOF
+          apiVersion: v1
+          kind: Config
+          clusters:
+          - name: my-cluster
+            cluster:
+              server: https://46.21.244.175
+              certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCg==  # вставь свой CA
+          users:
+          - name: github-actions
+            user:
+              token: eyJhbGciOiJSUzI1NiIsImtpZCI6I...  # вставь свой токен
+          contexts:
+          - name: github-actions
+            context:
+              cluster: my-cluster
+              user: github-actions
+              namespace: fitness-app
+          current-context: github-actions
+          EOF
       
-          echo "Step 3: Show first 20 lines of kubeconfig for debug"
-          head -n 20 $HOME/.kube/config
-      
-          echo "Step 4: List contexts"
+          echo "Step 3: Verify kubeconfig"
           kubectl config get-contexts
-      
-          echo "Step 5: Show current context"
-          kubectl config current-context || echo "NO CURRENT CONTEXT"
-      
-          echo "Step 6: Set current context to github-actions"
-          kubectl config use-context github-actions
-      
-          echo "Step 7: Verify connection by listing nodes"
+          kubectl config current-context
           kubectl get nodes
 
 
