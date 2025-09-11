@@ -169,7 +169,9 @@ jobs:
       - name: Set kubeconfig
         run: |
           mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 --decode > $HOME/.kube/config
+          cat <<'EOF' > $HOME/.kube/config
+          ${{ secrets.KUBECONFIG_DATA }}
+          EOF
           chmod 600 $HOME/.kube/config
   
       # 2️⃣ Удаление старой SonarQube job (если есть)
@@ -189,14 +191,13 @@ jobs:
           kubectl wait --for=condition=complete --timeout=600s job/$JOB_NAME -n $NAMESPACE
           echo "✅ SonarQube job completed"
   
-      # 5️⃣ Проверка покрытия из SonarQube напрямую
+      # 5️⃣ Проверка покрытия напрямую из SonarQube
       - name: Check Sonar Coverage
         run: |
-          SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}"   # https://sonar.example.com
+          SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}"
           SONAR_PROJECT_KEY="fitness-app"
           SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
   
-          # Берём актуальное покрытие напрямую
           RESPONSE=$(curl -s -u "$SONAR_TOKEN:" \
             "$SONAR_HOST_URL/api/measures/component?component=$SONAR_PROJECT_KEY&metricKeys=coverage")
   
@@ -204,13 +205,13 @@ jobs:
   
           echo "Coverage from SonarQube: $COVERAGE%"
   
-          # Проверка
           if (( $(echo "$COVERAGE < 80" | bc -l) )); then
             echo "❌ Code coverage is below 80%"
             exit 1
           fi
   
           echo "✅ Code coverage is OK"
+
 
 
 
