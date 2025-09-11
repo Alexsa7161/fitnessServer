@@ -168,27 +168,20 @@ jobs:
 
       - name: Set kubeconfig with debug
         run: |
-          echo "Step 1: Show HOME and .kube"
-          echo "HOME=$HOME"
-          ls -la $HOME
           mkdir -p $HOME/.kube
-          echo "Created .kube directory"
-          ls -la $HOME/.kube
-      
-          echo "Step 2: Decode kubeconfig from secret"
-          echo "${{ secrets.KUBECONFIG }}" | head -n 10
           echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
-          echo "Decoded kubeconfig:"
-          head -n 10 $HOME/.kube/config
           chmod 600 $HOME/.kube/config
       
-          echo "Step 3: Check kubectl version and context"
-          kubectl version --client
-          kubectl config get-contexts
+          echo "Check config contents (first 20 lines)"
+          head -n 20 $HOME/.kube/config
+      
+          echo "Set current context"
+          kubectl config use-context github-actions
+      
+          echo "Check context"
           kubectl config current-context
+          kubectl get pods -n fitness-app
 
-          echo "Step 4: Test connectivity to cluster (namespace-specific)"
-          kubectl get pods -n fitness-app || kubectl cluster-info
   
       - name: Delete old SonarQube job (ignore if not exists)
         run: |
