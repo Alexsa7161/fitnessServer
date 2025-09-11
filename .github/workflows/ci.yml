@@ -200,7 +200,7 @@ jobs:
           RESPONSE=$(curl -s -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/qualitygates/project_status?projectKey=$SONAR_PROJECT_KEY")
   
           STATUS=$(echo "$RESPONSE" | jq -r '.projectStatus.status')
-          COVERAGE=$(echo "$RESPONSE" | jq -r '.projectStatus.conditions[] | select(.metricKey=="new_coverage") | .actualValue')
+          COVERAGE=$(echo "$RESPONSE" | jq -r '.projectStatus.conditions[] | select(.metricKey=="coverage") | .actualValue')
   
           echo "Quality Gate Status: $STATUS"
           echo "Coverage: $COVERAGE%"
