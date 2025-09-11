@@ -187,8 +187,8 @@ jobs:
           kubectl config get-contexts
           kubectl config current-context
 
-    echo "Step 4: Test connectivity to cluster (namespace-specific)"
-    kubectl get pods -n fitness-app || kubectl cluster-info
+          echo "Step 4: Test connectivity to cluster (namespace-specific)"
+          kubectl get pods -n fitness-app || kubectl cluster-info
   
       - name: Delete old SonarQube job (ignore if not exists)
         run: |
