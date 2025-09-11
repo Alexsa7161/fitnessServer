@@ -161,7 +161,7 @@ jobs:
 
   sonar_scan:
     runs-on: ubuntu-latest
-    # needs: test
+    needs: test
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -251,8 +251,8 @@ jobs:
       
           echo "✅ SonarQube metrics check passed: coverage ≥ 80, 0 bugs, 0 vulnerabilities"
 
-          
   deployment:
+    needs: sonar_scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
