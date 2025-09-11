@@ -213,7 +213,17 @@ jobs:
           NAMESPACE=fitness-app
           kubectl wait --for=condition=complete --timeout=600s job/$JOB_NAME -n $NAMESPACE
           echo "SonarQube job completed"
-  
+
+      - name: Parse coverage
+        run: |
+          COVERAGE=$(xmllint --xpath "string(//counter[@type='LINE']/@covered/@ratio)" target/site/jacoco/jacoco.xml)
+          echo "Coverage: $COVERAGE"
+          if (( $(echo "$COVERAGE < 0.8" | bc -l) )); then
+            echo "Coverage below 80%"
+            exit 1
+          fi
+
+          
       - name: Check Sonar Quality Gate and Coverage
         run: |
           SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}" # например https://sonar.example.com
