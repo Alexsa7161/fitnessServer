@@ -214,14 +214,6 @@ jobs:
           kubectl wait --for=condition=complete --timeout=600s job/$JOB_NAME -n $NAMESPACE
           echo "SonarQube job completed"
 
-      - name: Parse coverage
-        run: |
-          COVERAGE=$(grep -oP 'line rate="\K[0-9.]+' target/site/jacoco/jacoco.xml | head -1)
-          echo "Coverage: $COVERAGE"
-          if (( $(echo "$COVERAGE < 0.8" | bc -l) )); then
-            echo "Coverage below 80%"
-            exit 1
-          fi
 
           
       - name: Check Sonar Quality Gate and Coverage
@@ -230,25 +222,34 @@ jobs:
           SONAR_PROJECT_KEY="fitness-app"
           SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
   
-          RESPONSE=$(curl -s -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/qualitygates/project_status?projectKey=$SONAR_PROJECT_KEY")
-
-          STATUS=$(echo "$RESPONSE" | jq -r '.projectStatus.status')
-          COVERAGE=$(echo "$RESPONSE" | jq -r '.projectStatus.conditions[] | select(.metricKey=="coverage") | .actualValue')
-
-          echo "Quality Gate Status: $STATUS"
+          echo "Fetching SonarQube metrics..."
+          RESPONSE=$(curl -s -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/measures/component?component=$SONAR_PROJECT_KEY&metricKeys=coverage,bugs,vulnerabilities")
+      
+          COVERAGE=$(echo "$RESPONSE" | jq -r '.component.measures[] | select(.metric=="coverage") | .value')
+          BUGS=$(echo "$RESPONSE" | jq -r '.component.measures[] | select(.metric=="bugs") | .value')
+          VULNERABILITIES=$(echo "$RESPONSE" | jq -r '.component.measures[] | select(.metric=="vulnerabilities") | .value')
+      
           echo "Coverage: $COVERAGE%"
-
-          if [ "$STATUS" != "OK" ]; then
-            echo "❌ SonarQube Quality Gate failed"
-            exit 1
-          fi
-
+          echo "Bugs: $BUGS"
+          echo "Vulnerabilities: $VULNERABILITIES"
+      
+          # Проверка условий
           if (( $(echo "$COVERAGE < 80" | bc -l) )); then
             echo "❌ Code coverage is below 80%"
             exit 1
           fi
-
-          echo "✅ SonarQube Quality Gate passed and coverage is OK"
+      
+          if [ "$BUGS" != "0" ]; then
+            echo "❌ There are $BUGS bugs in the project"
+            exit 1
+          fi
+      
+          if [ "$VULNERABILITIES" != "0" ]; then
+            echo "❌ There are $VULNERABILITIES vulnerabilities in the project"
+            exit 1
+          fi
+      
+          echo "✅ SonarQube metrics check passed: coverage ≥ 80, 0 bugs, 0 vulnerabilities"
 
 
 
