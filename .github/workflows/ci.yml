@@ -291,23 +291,25 @@ jobs:
           kubectl config current-context
           kubectl get nodes
 
-      - name: Deploy to Kubernetes
-        run: |
-          echo "== Updating backend and frontend deployments =="
-
-          kubectl -n $NAMESPACE set image deployment/fitness-backend fitness-backend=alexsa7161/fitness-server:latest
-          kubectl -n $NAMESPACE set image deployment/fitness-frontend fitness-frontend=alexsa7161/fitness-client:latest
-
-          echo "== Waiting for deployments to roll out =="
-          kubectl -n $NAMESPACE rollout status deployment/fitness-backend
-          kubectl -n $NAMESPACE rollout status deployment/fitness-frontend
-
-          echo "== Restarting deployments to pull latest image =="
-          kubectl -n $NAMESPACE rollout restart deployment/fitness-backend
-          kubectl -n $NAMESPACE rollout restart deployment/fitness-frontend
-
-          echo "== Current pods =="
-          kubectl -n $NAMESPACE get pods
+          - name: Deploy to Kubernetes
+            env:
+              NAMESPACE: fitness-app  # обязательно!
+            run: |
+              echo "== Updating backend and frontend deployments =="
+          
+              kubectl -n $NAMESPACE set image deployment/fitness-backend fitness-backend=alexsa7161/fitness-server:latest
+              kubectl -n $NAMESPACE set image deployment/fitness-frontend fitness-frontend=alexsa7161/fitness-client:latest
+          
+              echo "== Waiting for deployments to roll out =="
+              kubectl -n $NAMESPACE rollout status deployment/fitness-backend
+              kubectl -n $NAMESPACE rollout status deployment/fitness-frontend
+          
+              echo "== Restarting deployments to pull latest image =="
+              kubectl -n $NAMESPACE rollout restart deployment/fitness-backend
+              kubectl -n $NAMESPACE rollout restart deployment/fitness-frontend
+          
+              echo "== Current pods =="
+              kubectl -n $NAMESPACE get pods
 
   # cleanup:
   #   runs-on: ubuntu-latest
