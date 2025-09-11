@@ -295,7 +295,7 @@ jobs:
             NAMESPACE: fitness-app
           run: |
             echo "== Updating backend and frontend deployments =="
-            kubectl -n $NAMESPACE set image deployment/fitness-backend fitness-backend=alexsa7161/fitness-server:latest
+            kubectl -n $NAMESPACE set image deployment/fitness-backend fitness-app-v2=alexsa7161/fitness-app_v2:latest
             kubectl -n $NAMESPACE set image deployment/fitness-frontend fitness-frontend=alexsa7161/fitness-client:latest
     
             echo "== Waiting for deployments to roll out =="
