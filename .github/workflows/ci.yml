@@ -173,24 +173,20 @@ jobs:
           chmod 600 $HOME/.kube/config
           kubectl get nodes
   
-      # 2️⃣ Удаление старой SonarQube job (если есть)
       - name: Delete old SonarQube job (ignore if not exists)
         run: |
           kubectl delete job sonar-scan -n fitness-app || echo "Job not found"
   
-      # 3️⃣ Применение новой SonarQube job
       - name: Apply SonarQube job
         run: kubectl apply -f ./sonar-job.yaml
 
-      # 4️⃣ Ожидание завершения job
       - name: Wait for SonarQube job to finish
         run: |
           JOB_NAME=sonar-scan
           NAMESPACE=fitness-app
           kubectl wait --for=condition=complete --timeout=600s job/$JOB_NAME -n $NAMESPACE
-          echo "✅ SonarQube job completed"
+          echo "SonarQube job completed"
   
-      # 5️⃣ Проверка Quality Gate и покрытия
       - name: Check Sonar Quality Gate and Coverage
         run: |
           SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}" # например https://sonar.example.com
