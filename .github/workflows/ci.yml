@@ -165,7 +165,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+  
       # 1️⃣ Установка kubeconfig
       - name: Set kubeconfig
         run: |
@@ -183,7 +183,7 @@ jobs:
       # 3️⃣ Применение новой SonarQube job
       - name: Apply SonarQube job
         run: kubectl apply -f ./sonar-job.yaml
-
+  
       # 4️⃣ Ожидание завершения job
       - name: Wait for SonarQube job to finish
         run: |
@@ -200,23 +200,23 @@ jobs:
           SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
   
           RESPONSE=$(curl -s -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/qualitygates/project_status?projectKey=$SONAR_PROJECT_KEY")
-
+  
           STATUS=$(echo "$RESPONSE" | jq -r '.projectStatus.status')
           COVERAGE=$(echo "$RESPONSE" | jq -r '.projectStatus.conditions[] | select(.metricKey=="coverage") | .actualValue')
-
+  
           echo "Quality Gate Status: $STATUS"
           echo "Coverage: $COVERAGE%"
-
+  
           if [ "$STATUS" != "OK" ]; then
             echo "❌ SonarQube Quality Gate failed"
             exit 1
           fi
-
+  
           if (( $(echo "$COVERAGE < 80" | bc -l) )); then
             echo "❌ Code coverage is below 80%"
             exit 1
           fi
-
+  
           echo "✅ SonarQube Quality Gate passed and coverage is OK"
 
 
