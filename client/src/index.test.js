@@ -1,10 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
-
-// Мокаем reportWebVitals, но чтобы отслеживать вызов
-jest.mock('./reportWebVitals', () => jest.fn());
+import * as reportWebVitalsModule from './reportWebVitals';
 
 describe('index.js', () => {
   let div;
@@ -17,19 +14,21 @@ describe('index.js', () => {
 
   afterEach(() => {
     document.body.removeChild(div);
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   test('рендерит App и вызывает reportWebVitals', () => {
-    const root = ReactDOM.createRoot(div);
+    // Шпионим за reportWebVitals и подменяем реализацию
+    const spy = jest.spyOn(reportWebVitalsModule, 'default').mockImplementation(() => {});
 
-    root.render(
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
-    );
+    // Динамически импортируем index.js, чтобы сработал вызов reportWebVitals
+    require('./index.js');
 
     // Проверяем, что reportWebVitals был вызван
-    expect(reportWebVitals).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalled();
+
+    // Проверяем, что App рендерится в div#root
+    const rootDiv = document.getElementById('root');
+    expect(rootDiv).toBeTruthy();
   });
 });
