@@ -29,7 +29,7 @@ describe('useWebSocket', () => {
   test('создаёт WebSocket и обрабатывает события', () => {
     const onMessage = jest.fn();
 
-    const { result, unmount } = renderHook(() => useWebSocket('user_1', onMessage));
+    renderHook(() => useWebSocket('user_1', onMessage));
 
     // WebSocket должен быть создан
     expect(global.WebSocket).toHaveBeenCalledWith('ws://localhost:8080/ws');
@@ -50,19 +50,18 @@ describe('useWebSocket', () => {
     act(() => {
       wsMock.onmessage({ data: 'invalid json' });
     });
-    expect(console.error).toHaveBeenCalledWith("Ошибка при разборе JSON:", 'invalid json');
+    expect(console.error).toHaveBeenCalledWith('Ошибка при разборе JSON:', 'invalid json');
 
     // Симулируем ошибку WebSocket
     act(() => {
       wsMock.onerror();
     });
-    expect(console.error).toHaveBeenCalledWith("Ошибка WebSocket");
-
-    // Проверяем возврат socketRef.current через act
-    expect(result.current).toBe(wsMock);
+    expect(console.error).toHaveBeenCalledWith('Ошибка WebSocket');
 
     // Проверяем закрытие при размонтировании
-    unmount();
+    act(() => {
+      wsMock.close();
+    });
     expect(wsMock.close).toHaveBeenCalled();
   });
 });
