@@ -30,14 +30,14 @@ describe('useWebSocket', () => {
     const onMessage = jest.fn();
     const { result, unmount } = renderHook(() => useWebSocket('user_1', onMessage));
 
-    // Проверяем, что WebSocket создан
+    // WebSocket должен быть создан
     expect(global.WebSocket).toHaveBeenCalledWith('ws://localhost:8080/ws');
 
     // Симулируем открытие соединения
     wsMock.onopen();
     expect(wsMock.send).toHaveBeenCalledWith('user_1');
 
-    // Симулируем получение корректного JSON-сообщения
+    // Симулируем получение корректного JSON
     wsMock.onmessage({ data: JSON.stringify({ metric: 'heart_rate', value: 80 }) });
     expect(onMessage).toHaveBeenCalledWith({ metric: 'heart_rate', value: 80 });
 
