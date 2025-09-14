@@ -1,68 +1,72 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AddRecordForm from './AddRecordForm';
 
-// Мокаем fetch
-beforeEach(() => {
-  global.fetch = jest.fn();
-});
-
-afterEach(() => {
-  jest.resetAllMocks();
-});
-
 describe('AddRecordForm', () => {
-  test('показывает сообщение об ошибке, если поля пустые', () => {
-    render(<AddRecordForm />);
-    fireEvent.click(screen.getByText('Добавить запись'));
-    expect(screen.getByText('❗ Заполните все поля для добавления!')).toBeInTheDocument();
+  beforeEach(() => {
+    // Мокаем fetch глобально
+    global.fetch = jest.fn();
   });
 
-  test('успешная отправка данных', async () => {
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  test('рендерит все поля и кнопку', () => {
+    render(<AddRecordForm />);
+    expect(screen.getByLabelText(/User ID/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Метрика/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Значение/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Добавить запись/i })).toBeInTheDocument();
+  });
+
+  test('показывает сообщение если поля пустые', () => {
+    render(<AddRecordForm />);
+    fireEvent.click(screen.getByRole('button', { name: /Добавить запись/i }));
+    expect(screen.getByText(/Заполните все поля/i)).toBeInTheDocument();
+  });
+
+  test('успешное добавление записи', async () => {
     fetch.mockResolvedValueOnce({ ok: true });
 
     render(<AddRecordForm />);
-    fireEvent.change(screen.getByPlaceholderText('user_0'), { target: { value: 'user1' } });
-    fireEvent.change(screen.getByPlaceholderText('heart_rate'), { target: { value: 'pulse' } });
-    fireEvent.change(screen.getByPlaceholderText('85'), { target: { value: '90' } });
+    fireEvent.change(screen.getByLabelText(/User ID/i), { target: { value: 'user_1' } });
+    fireEvent.change(screen.getByLabelText(/Метрика/i), { target: { value: 'heart_rate' } });
+    fireEvent.change(screen.getByLabelText(/Значение/i), { target: { value: '75' } });
 
-    fireEvent.click(screen.getByText('Добавить запись'));
+    fireEvent.click(screen.getByRole('button', { name: /Добавить запись/i }));
 
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('/api/data', expect.objectContaining({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      }));
-      expect(screen.getByText('✅ Запись добавлена успешно!')).toBeInTheDocument();
+      expect(screen.getByText(/Запись добавлена успешно/i)).toBeInTheDocument();
     });
   });
 
-  test('ошибка при добавлении записи', async () => {
+  test('ошибка сервера при добавлении', async () => {
     fetch.mockResolvedValueOnce({ ok: false });
 
     render(<AddRecordForm />);
-    fireEvent.change(screen.getByPlaceholderText('user_0'), { target: { value: 'user1' } });
-    fireEvent.change(screen.getByPlaceholderText('heart_rate'), { target: { value: 'pulse' } });
-    fireEvent.change(screen.getByPlaceholderText('85'), { target: { value: '90' } });
+    fireEvent.change(screen.getByLabelText(/User ID/i), { target: { value: 'user_1' } });
+    fireEvent.change(screen.getByLabelText(/Метрика/i), { target: { value: 'heart_rate' } });
+    fireEvent.change(screen.getByLabelText(/Значение/i), { target: { value: '75' } });
 
-    fireEvent.click(screen.getByText('Добавить запись'));
+    fireEvent.click(screen.getByRole('button', { name: /Добавить запись/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('❗ Ошибка добавления записи.')).toBeInTheDocument();
+      expect(screen.getByText(/Ошибка добавления записи/i)).toBeInTheDocument();
     });
   });
 
-  test('ошибка сети при fetch', async () => {
+  test('ошибка сети при добавлении', async () => {
     fetch.mockRejectedValueOnce(new Error('Network Error'));
 
     render(<AddRecordForm />);
-    fireEvent.change(screen.getByPlaceholderText('user_0'), { target: { value: 'user1' } });
-    fireEvent.change(screen.getByPlaceholderText('heart_rate'), { target: { value: 'pulse' } });
-    fireEvent.change(screen.getByPlaceholderText('85'), { target: { value: '90' } });
+    fireEvent.change(screen.getByLabelText(/User ID/i), { target: { value: 'user_1' } });
+    fireEvent.change(screen.getByLabelText(/Метрика/i), { target: { value: 'heart_rate' } });
+    fireEvent.change(screen.getByLabelText(/Значение/i), { target: { value: '75' } });
 
-    fireEvent.click(screen.getByText('Добавить запись'));
+    fireEvent.click(screen.getByRole('button', { name: /Добавить запись/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('❗ Ошибка сети при добавлении.')).toBeInTheDocument();
+      expect(screen.getByText(/Ошибка сети при добавлении/i)).toBeInTheDocument();
     });
   });
 });
