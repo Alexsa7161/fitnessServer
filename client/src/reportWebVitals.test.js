@@ -1,43 +1,37 @@
-// reportWebVitals.test.js
 import reportWebVitals from './reportWebVitals';
+import * as webVitals from 'web-vitals';
 
-const webVitalsMock = {
+// Мокаем все функции web-vitals
+jest.mock('web-vitals', () => ({
   getCLS: jest.fn(),
   getFID: jest.fn(),
   getFCP: jest.fn(),
   getLCP: jest.fn(),
   getTTFB: jest.fn(),
-};
+}));
 
 describe('reportWebVitals', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Подменяем динамический import на промис с моками
-    jest.spyOn(global, 'import').mockImplementation(() => Promise.resolve(webVitalsMock));
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
+  test('не вызывает web-vitals, если аргумент не функция', () => {
+    reportWebVitals();
+    expect(webVitals.getCLS).not.toHaveBeenCalled();
+    expect(webVitals.getFID).not.toHaveBeenCalled();
+    expect(webVitals.getFCP).not.toHaveBeenCalled();
+    expect(webVitals.getLCP).not.toHaveBeenCalled();
+    expect(webVitals.getTTFB).not.toHaveBeenCalled();
   });
 
-  test('не вызывает web-vitals, если аргумент не функция', async () => {
-    await reportWebVitals();
-    expect(webVitalsMock.getCLS).not.toHaveBeenCalled();
-    expect(webVitalsMock.getFID).not.toHaveBeenCalled();
-    expect(webVitalsMock.getFCP).not.toHaveBeenCalled();
-    expect(webVitalsMock.getLCP).not.toHaveBeenCalled();
-    expect(webVitalsMock.getTTFB).not.toHaveBeenCalled();
-  });
-
-  test('вызывает все функции из web-vitals при передаче callback', async () => {
+  test('вызывает все функции из web-vitals при передаче callback', () => {
     const callback = jest.fn();
-    await reportWebVitals(callback);
+    reportWebVitals(callback);
 
-    expect(webVitalsMock.getCLS).toHaveBeenCalledWith(callback);
-    expect(webVitalsMock.getFID).toHaveBeenCalledWith(callback);
-    expect(webVitalsMock.getFCP).toHaveBeenCalledWith(callback);
-    expect(webVitalsMock.getLCP).toHaveBeenCalledWith(callback);
-    expect(webVitalsMock.getTTFB).toHaveBeenCalledWith(callback);
+    expect(webVitals.getCLS).toHaveBeenCalledWith(callback);
+    expect(webVitals.getFID).toHaveBeenCalledWith(callback);
+    expect(webVitals.getFCP).toHaveBeenCalledWith(callback);
+    expect(webVitals.getLCP).toHaveBeenCalledWith(callback);
+    expect(webVitals.getTTFB).toHaveBeenCalledWith(callback);
   });
 });
