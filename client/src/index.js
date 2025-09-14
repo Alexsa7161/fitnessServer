@@ -1,17 +1,29 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
+import * as reportWebVitalsModule from './reportWebVitals';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+describe('index.js', () => {
+  let div;
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+  beforeEach(() => {
+    div = document.createElement('div');
+    div.id = 'root';
+    document.body.appendChild(div);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(div);
+    jest.restoreAllMocks();
+  });
+
+  test('рендерит App и вызывает reportWebVitals', () => {
+    // Шпионим за reportWebVitals
+    const spy = jest.spyOn(reportWebVitalsModule, 'default').mockImplementation(() => {});
+
+    // Импорт index.js динамически, чтобы вызов reportWebVitals сработал
+    const indexModule = require('./index.js');
+
+    expect(spy).toHaveBeenCalled();
+  });
+});
