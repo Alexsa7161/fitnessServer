@@ -1,3 +1,4 @@
+// App.js
 import { useState, useCallback } from 'react';
 import Header from './components/Header';
 import Metrics from './components/Metrics';
@@ -33,11 +34,18 @@ function App() {
   return (
     <div className="p-6 font-sans">
       <h1 className="text-2xl font-bold mb-4">Актуальные данные пользователя</h1>
+
       <Header userId={userId} setUserId={setUserId} onConnect={handleConnect} data-testid="header" />
+
       <Metrics metrics={metrics} data-testid="metrics" />
+
       <History userId={userId} data-testid="history" />
+
       <CrudForm data-testid="crud-form" />
-      <button onClick={handleConnect} data-testid="connect-btn">Connect</button>
+
+      <button data-testid="connect-btn" onClick={handleConnect}>
+        Connect
+      </button>
     </div>
   );
 }
